@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Weltreise Dashboard</title>
+  
+  <!-- Tailwind CSS & Supabase JS SDK via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: { 850: '#131f32' }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    /* Verhindert Pull-to-Refresh & Overscroll auf Handys für App-Feeling */
+    body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+    /* Formatiert Modals/Sheets */
+    .bottom-sheet { transition: transform 0.3s ease-in-out; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-24 font-sans select-none">
+
+  <!-- TOP HEADER & LÄNDERAUSWAHL -->
+  <header class="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span id="current-flag" class="text-2xl">🇹🇭</span>
+      <div>
+        <select id="country-select" onchange="changeCountry(this.value)" class="bg-transparent text-lg font-bold text-white focus:outline-none cursor-pointer">
+          <option class="bg-slate-900 text-white" value="">Lade Länder...</option>
+        </select>
+        <p class="text-[10px] text-emerald-400 font-medium tracking-wide uppercase">Aktuelles Reiseland</p>
+      </div>
+    </div>
+    <button onclick="toggleStatsModal()" class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5">
+      <span>📊</span> Stats
+    </button>
+  </header>
+
+  <!-- HAUPTCONTAINER (DYNAMISCHE TABS) -->
+  <main class="max-w-md mx-auto p-4">
+
+    <!-- TAB 1: MATRIX (18 KATEGORIEN) -->
+    <section id="tab-matrix" class="tab-content">
+      <div id="matrix-grid" class="grid grid-cols-2 gap-3">
+        <!-- WIRD DYNAMISCH PER JS BEFÜLLT -->
+        <p class="col-span-2 text-center text-slate-500 py-12">Lade Matrix-Daten...</p>
+      </div>
+    </section>
+
+    <!-- TAB 2: WÄHRUNGSRECHNER -->
+    <section id="tab-rechner" class="tab-content hidden">
+      <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/60 shadow-xl">
+        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">💱 Währungsrechner</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1" id="label-local-curr">Betrag in Landeswährung</label>
+            <input type="number" id="calc-input-local" oninput="convertCurrency('local')" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xl font-mono text-emerald-400 focus:outline-none focus:border-emerald-500">
+          </div>
+          <div class="flex justify-center">
+            <span class="text-xl text-slate-500">⇅</span>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Betrag in Euro (€)</label>
+            <input type="number" id="calc-input-eur" oninput="convertCurrency('eur')" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xl font-mono text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <p id="calc-rate-info" class="text-[11px] text-slate-500 text-center pt-2">Wechselkurs wird geladen...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: SPRACHEN & VOKABELN -->
+    <section id="tab-sprachen" class="tab-content hidden">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold flex items-center gap-2">🗣️ Vokabel-Trainer</h2>
+        <button onclick="openNewVocabModal()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium">+ Neu</button>
+      </div>
+      <div id="vocab-list" class="space-y-2">
+        <p class="text-center text-slate-500 py-8">Keine Vokabeln für dieses Land vorhanden.</p>
+      </div>
+    </section>
+
+    <!-- TAB 4: TRESOR & NOTFALL-SAFE -->
+    <section id="tab-safe" class="tab-content hidden">
+      <h2 class="text-lg font-bold mb-4 flex items-center gap-2">🛡️ Notfall & Dokumente</h2>
+      <div class="space-y-3">
+        <!-- Kat 4 Spezial-Infos -->
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-emerald-400 mb-2">💡 Kulturelle Hinweise & Tabus</h3>
+          <p id="safe-taboos" class="text-xs text-slate-300 leading-relaxed">Wähle ein Land aus.</p>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-rose-400 mb-2">🚨 Versicherten-Notfallkontakt</h3>
+          <p class="text-xs text-slate-300">HanseMerkur / Young Travellers</p>
+          <p class="text-xs font-mono text-slate-400 mt-1">24h Hotline: +49 40 5555-789</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- DETAIL & EINGABE MODAL (BOTTOM SHEET) -->
+  <div id="entry-sheet" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[85vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="sheet-title" class="text-lg font-bold text-slate-100">Kategorie</h3>
+        <button onclick="closeEntrySheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      
+      <!-- Liste existierender Einträge -->
+      <div id="sheet-entries-list" class="space-y-3 mb-6"></div>
+
+      <hr class="border-slate-800 mb-4">
+
+      <!-- Neuer Eintrag Formular -->
+      <form id="entry-form" onsubmit="saveEntry(event)" class="space-y-3">
+        <input type="hidden" id="form-category-id">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Titel / Erlebnis</label>
+          <input type="text" id="form-title" required placeholder="z. B. Teriyaki Burger im Shibuya McD" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Notizen & Details</label>
+          <textarea id="form-notes" rows="2" placeholder="Erinnerungen, Geschmack, Preise..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
+          Eintrag Speichern
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- FIXED BOTTOM NAVIGATION BAR -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 max-w-md mx-auto flex justify-around items-center p-2 z-40">
+    <button onclick="switchTab('matrix')" id="nav-matrix" class="flex flex-col items-center gap-1 text-emerald-400">
+      <span class="text-lg">🌍</span><span class="text-[10px] font-medium">Matrix</span>
+    </button>
+    <button onclick="switchTab('rechner')" id="nav-rechner" class="flex flex-col items-center gap-1 text-slate-400">
+      <span class="text-lg">💱</span><span class="text-[10px] font-medium">Rechner</span>
+    </button>
+    <button onclick="switchTab('sprachen')" id="nav-sprachen" class="flex flex-col items-center gap-1 text-slate-400">
+      <span class="text-lg">🗣️</span><span class="text-[10px] font-medium">Sprachen</span>
+    </button>
+    <button onclick="switchTab('safe')" id="nav-safe" class="flex flex-col items-center gap-1 text-slate-400">
+      <span class="text-lg">🛡️</span><span class="text-[10px] font-medium">Safe</span>
+    </button>
+  </nav>
+
+  <!-- JAVASCRIPT APP LOGIK -->
+  <script>
+    // 1. SUPABASE CLIENT ANBINDUNG
+    // DEINE SUPABASE KEYS HIER EINTRAGEN:
+    const SUPABASE_URL = 'DEINE_SUPABASE_URL';
+    const SUPABASE_KEY = 'DEIN_SUPABASE_ANON_KEY';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Globale Zustände
+    let countries = [];
+    let categories = [];
+    let currentCountry = null;
+    let exchangeRates = { EUR: 1, THB: 38.5, JPY: 160.2, USD: 1.08, VND: 27000 }; // Fallback-Kurse
+
+    // 2. INITIALISIERUNG
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadInitialData();
+    });
+
+    async function loadInitialData() {
+      // Kategorien aus Supabase laden
+      const { data: catData } = await supabase.from('matrix_categories').select('*').order('id');
+      categories = catData || [];
+
+      // Länder aus Supabase laden
+      const { data: countryData } = await supabase.from('countries').select('*').order('name');
+      countries = countryData || [];
+
+      // Dropdown befüllen
+      const select = document.getElementById('country-select');
+      select.innerHTML = '';
+      countries.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.className = 'bg-slate-900 text-white';
+        opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
+        select.appendChild(opt);
+      });
+
+      if (countries.length > 0) {
+        changeCountry(countries[0].id);
+      }
+    }
+
+    // 3. LAND WECHSELN
+    async function changeCountry(countryId) {
+      currentCountry = countries.find(c => c.id === countryId);
+      if (!currentCountry) return;
+
+      document.getElementById('current-flag').innerText = currentCountry.flag_emoji || '🌍';
+      document.getElementById('safe-taboos').innerText = currentCountry.cat4_taboos || 'Keine speziellen Hinweise hinterlegt.';
+      document.getElementById('label-local-curr').innerText = `Betrag in ${currentCountry.currency_code || 'Lokalwährung'}`;
+
+      await renderMatrixGrid();
+      await loadVocabulary();
+    }
+
+    // 4. MATRIX GRID RENDERN
+    async function renderMatrixGrid() {
+      const grid = document.getElementById('matrix-grid');
+      grid.innerHTML = '';
+
+      // Einträge für das aktuelle Land aus Supabase ziehen
+      const { data: entries } = await supabase
+        .from('entries')
+        .select('*')
+        .eq('country_id', currentCountry.id);
+
+      categories.forEach(cat => {
+        const catEntries = entries ? entries.filter(e => e.category_id === cat.id) : [];
+        const count = catEntries.length;
+
+        const card = document.createElement('div');
+        card.onclick = () => openEntrySheet(cat, catEntries);
+        card.className = `bg-slate-800/80 border ${count > 0 ? 'border-emerald-500/60 bg-emerald-950/10' : 'border-slate-700/60'} rounded-xl p-3 flex flex-col justify-between active:scale-95 transition cursor-pointer shadow-md`;
+        
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-2xl">${cat.icon}</span>
+              <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${count > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}">
+                #${cat.id}
+              </span>
+            </div>
+            <h3 class="text-xs font-semibold text-slate-100 line-clamp-1">${cat.title}</h3>
+            <p class="text-[10px] text-slate-400 mt-1 line-clamp-2 leading-tight">${cat.description}</p>
+          </div>
+          <div class="mt-2 pt-1.5 border-t border-slate-700/40 flex justify-between items-center text-[10px]">
+            <span class="${count > 0 ? 'text-emerald-400 font-bold' : 'text-slate-500'}">${count} ${count === 1 ? 'Eintrag' : 'Einträge'}</span>
+            <span class="text-slate-500">→</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 5. DETAIL-SHEET ÖFFNEN & SPEICHERN
+    let activeCategory = null;
+
+    function openEntrySheet(category, catEntries) {
+      activeCategory = category;
+      document.getElementById('sheet-title').innerText = `${category.icon} ${category.title}`;
+      document.getElementById('form-category-id').value = category.id;
+
+      const listContainer = document.getElementById('sheet-entries-list');
+      listContainer.innerHTML = '';
+
+      if (catEntries.length === 0) {
+        listContainer.innerHTML = `<p class="text-xs text-slate-500 italic">Noch keine Einträge für ${currentCountry.name}.</p>`;
+      } else {
+        catEntries.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'bg-slate-800 p-2.5 rounded-lg border border-slate-700 text-xs';
+          div.innerHTML = `
+            <div class="font-bold text-slate-200">${item.title}</div>
+            ${item.notes ? `<div class="text-slate-400 mt-1">${item.notes}</div>` : ''}
+          `;
+          listContainer.appendChild(div);
+        });
+      }
+
+      document.getElementById('entry-sheet').classList.remove('hidden');
+    }
+
+    function closeEntrySheet() {
+      document.getElementById('entry-sheet').classList.add('hidden');
+      document.getElementById('entry-form').reset();
+    }
+
+    async function saveEntry(event) {
+      event.preventDefault();
+      const title = document.getElementById('form-title').value;
+      const notes = document.getElementById('form-notes').value;
+      const catId = document.getElementById('form-category-id').value;
+
+      await supabase.from('entries').insert([{
+        country_id: currentCountry.id,
+        category_id: parseInt(catId),
+        title: title,
+        notes: notes
+      }]);
+
+      closeEntrySheet();
+      await renderMatrixGrid();
+    }
+
+    // 6. WÄHRUNGSRECHNER LOGIK
+    function convertCurrency(source) {
+      const rate = exchangeRates[currentCountry?.currency_code] || 1;
+      document.getElementById('calc-rate-info').innerText = `Wechselkurs: 1 EUR ≈ ${rate} ${currentCountry?.currency_code || 'Lokal'}`;
+
+      if (source === 'local') {
+        const val = parseFloat(document.getElementById('calc-input-local').value) || 0;
+        document.getElementById('calc-input-eur').value = (val / rate).toFixed(2);
+      } else {
+        const val = parseFloat(document.getElementById('calc-input-eur').value) || 0;
+        document.getElementById('calc-input-local').value = (val * rate).toFixed(2);
+      }
+    }
+
+    // 7. VOKABELN LADEN
+    async function loadVocabulary() {
+      const container = document.getElementById('vocab-list');
+      const { data: vocabs } = await supabase
+        .from('vocabulary')
+        .select('*')
+        .eq('country_id', currentCountry.id);
+
+      if (!vocabs || vocabs.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">Keine Vokabeln für ${currentCountry.name} vorhanden.</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      vocabs.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800 p-3 rounded-xl border border-slate-700 flex justify-between items-center';
+        card.innerHTML = `
+          <div>
+            <div class="text-sm font-bold text-emerald-400">${v.original_phrase}</div>
+            <div class="text-xs text-slate-300 mt-0.5">${v.translation}</div>
+          </div>
+          <button onclick="speakText('${v.original_phrase}')" class="text-lg bg-slate-700 p-2 rounded-lg">🔊</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function speakText(text) {
+      const msg = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(msg);
+    }
+
+    // 8. TAB NAVIGATION
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+      // Nav Styles zurücksetzen
+      ['matrix', 'rechner', 'sprachen', 'safe'].forEach(t => {
+        const btn = document.getElementById(`nav-${t}`);
+        if (t === tabName) {
+          btn.className = 'flex flex-col items-center gap-1 text-emerald-400';
+        } else {
+          btn.className = 'flex flex-col items-center gap-1 text-slate-400';
+        }
+      });
+
+      if (tabName === 'rechner') convertCurrency('local');
+    }
+  </script>
+</body>
+</html>
