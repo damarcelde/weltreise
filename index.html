@@ -158,17 +158,18 @@
 
   <!-- JAVASCRIPT APP LOGIK -->
   <script>
-    // 1. SUPABASE CLIENT ANBINDUNG
-    // DEINE SUPABASE KEYS HIER EINTRAGEN:
+    // 1. SUPABASE CLIENT ANBINDUNG (OHNE RE-DECLARATION CONFLICT)
     const SUPABASE_URL = 'https://cxhfloptewqgcfrnwyal.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4aGZsb3B0ZXdxZ2Nmcm53eWFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4ODQ5ODAsImV4cCI6MjEwNjQ2MDk4MH0.1vYDNdTTrUofcLiN_d_pv6ZxMBsWuBdc-QK9jtxaARE';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // Wir nutzen window.supabase.createClient(), um den globalen Supabase-SDK aufzurufen
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Globale Zustände
     let countries = [];
     let categories = [];
     let currentCountry = null;
-    let exchangeRates = { EUR: 1, THB: 38.5, JPY: 160.2, USD: 1.08, VND: 27000 }; // Fallback-Kurse
+    let exchangeRates = { EUR: 1, THB: 38.5, JPY: 160.2, USD: 1.08, VND: 27000, KRW: 1450, CNY: 7.8, KHR: 4400, PHP: 62, MYR: 5.0, LAK: 23000, MMK: 2300, HKD: 8.5, TWD: 35, SGD: 1.45, IDR: 17000, MOP: 8.7, MNT: 3700, KPW: 980, BND: 1.45, PGK: 4.2 };
 
     // 2. INITIALISIERUNG
     window.addEventListener('DOMContentLoaded', async () => {
@@ -177,16 +178,24 @@
 
     async function loadInitialData() {
       // Kategorien aus Supabase laden
-      const { data: catData } = await supabase.from('matrix_categories').select('*').order('id');
+      const { data: catData, error: catError } = await supabaseClient.from('matrix_categories').select('*').order('id');
+      if (catError) console.error('Fehler beim Laden der Kategorien:', catError);
       categories = catData || [];
 
       // Länder aus Supabase laden
-      const { data: countryData } = await supabase.from('countries').select('*').order('name');
+      const { data: countryData, error: countryError } = await supabaseClient.from('countries').select('*').order('name');
+      if (countryError) console.error('Fehler beim Laden der Länder:', countryError);
       countries = countryData || [];
 
       // Dropdown befüllen
       const select = document.getElementById('country-select');
       select.innerHTML = '';
+      
+      if (countries.length === 0) {
+        select.innerHTML = '<option value="">Keine Länder gefunden</option>';
+        return;
+      }
+
       countries.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
@@ -218,11 +227,15 @@
       const grid = document.getElementById('matrix-grid');
       grid.innerHTML = '';
 
+      if (!currentCountry) return;
+
       // Einträge für das aktuelle Land aus Supabase ziehen
-      const { data: entries } = await supabase
+      const { data: entries, error } = await supabaseClient
         .from('entries')
         .select('*')
         .eq('country_id', currentCountry.id);
+
+      if (error) console.error('Fehler beim Laden der Einträge:', error);
 
       categories.forEach(cat => {
         const catEntries = entries ? entries.filter(e => e.category_id === cat.id) : [];
@@ -291,15 +304,19 @@
       const notes = document.getElementById('form-notes').value;
       const catId = document.getElementById('form-category-id').value;
 
-      await supabase.from('entries').insert([{
+      const { error } = await supabaseClient.from('entries').insert([{
         country_id: currentCountry.id,
         category_id: parseInt(catId),
         title: title,
         notes: notes
       }]);
 
-      closeEntrySheet();
-      await renderMatrixGrid();
+      if (error) {
+        alert('Fehler beim Speichern: ' + error.message);
+      } else {
+        closeEntrySheet();
+        await renderMatrixGrid();
+      }
     }
 
     // 6. WÄHRUNGSRECHNER LOGIK
@@ -319,10 +336,14 @@
     // 7. VOKABELN LADEN
     async function loadVocabulary() {
       const container = document.getElementById('vocab-list');
-      const { data: vocabs } = await supabase
+      if (!currentCountry) return;
+
+      const { data: vocabs, error } = await supabaseClient
         .from('vocabulary')
         .select('*')
         .eq('country_id', currentCountry.id);
+
+      if (error) console.error('Fehler beim Laden der Vokabeln:', error);
 
       if (!vocabs || vocabs.length === 0) {
         container.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">Keine Vokabeln für ${currentCountry.name} vorhanden.</p>`;
@@ -345,8 +366,35 @@
     }
 
     function speakText(text) {
-      const msg = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(msg);
+      if ('speechSynthesis' in window) {
+        const msg = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(msg);
+      } else {
+        alert('Sprachausgabe wird von deinem Browser nicht unterstützt.');
+      }
+    }
+
+    async function openNewVocabModal() {
+      const phrase = prompt("Vokabel in Landessprache (z.B. Sawasdee):");
+      if (!phrase) return;
+      const translation = prompt("Übersetzung auf Deutsch (z.B. Hallo):");
+      if (!translation) return;
+
+      const { error } = await supabaseClient.from('vocabulary').insert([{
+        country_id: currentCountry.id,
+        original_phrase: phrase,
+        translation: translation
+      }]);
+
+      if (error) {
+        alert('Fehler beim Speichern der Vokabel: ' + error.message);
+      } else {
+        await loadVocabulary();
+      }
+    }
+
+    function toggleStatsModal() {
+      alert(`Reise-Statistik:\n- Geladene Länder: ${countries.length}\n- Aktuelles Land: ${currentCountry ? currentCountry.name : 'Keines'}`);
     }
 
     // 8. TAB NAVIGATION
