@@ -81,7 +81,7 @@
       <!-- Besuchshistorie & Timeline -->
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-sm font-bold flex items-center gap-2">📅 Besuchshistorie (Aktuelles Land)</h2>
+          <h2 class="text-sm font-bold flex items-center gap-2">📅 Besuchshistorie</h2>
           <button onclick="addVisitPrompt()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium">+ Besuch</button>
         </div>
         <div id="visits-list" class="space-y-2">
@@ -130,13 +130,13 @@
       <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
         <h3 class="text-sm font-semibold text-emerald-400 mb-2">💻 Prolific Remote-Arbeit</h3>
         <p class="text-xs text-slate-300">Account während Auslandsphasen unbedingt pausieren!</p>
-        <p class="text-xs text-slate-400 mt-1">Die Nutzung von Remote-Desktop (RustDesk) über einen Mac Mini oder FRITZ!Box-VPNs wird durch Browser-Telemetrie zwingend erkannt und führt zur dauerhaften Kontosperre.</p>
+        <p class="text-xs text-slate-400 mt-1">Die Nutzung von Remote-Desktop über einen Mac Mini oder VPNs wird erkannt und führt zur dauerhaften Kontosperre.</p>
       </div>
 
       <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
         <h3 class="text-sm font-semibold text-blue-400 mb-2">🏠 TrustedHousesitters</h3>
         <p class="text-xs text-slate-300">Währungsvorteil über Australien (AUD) nutzen.</p>
-        <p class="text-xs text-slate-400 mt-1">Über VPN auf Australien stellen, Cache leeren und mit gebührenfreier Kreditkarte in AUD bezahlen, um Kosten zu sparen.</p>
+        <p class="text-xs text-slate-400 mt-1">Über VPN auf Australien stellen, Cache leeren und mit gebührenfreier Kreditkarte in AUD bezahlen.</p>
       </div>
 
       <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
@@ -198,11 +198,6 @@
           <textarea id="form-notes" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea>
         </div>
 
-        <div>
-          <label class="block text-xs text-slate-400 mb-1">Beweisfoto (Optional)</label>
-          <input type="file" id="form-photo" accept="image/*" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-slate-700 file:text-emerald-400">
-        </div>
-
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
           Eintrag Speichern
         </button>
@@ -257,8 +252,11 @@
       const { data: entryData } = await supabaseClient.from('entries').select('*');
       allEntries = entryData || [];
 
-      // Besuche laden, falls die Tabelle existiert
-      const { data: visitData } = await supabaseClient.from('visits').select('*').catch(() => ({data: []}));
+      // Fehlerbereinigte Abfrage für die Besuche (ohne .catch())
+      const { data: visitData, error: visitError } = await supabaseClient.from('visits').select('*');
+      if (visitError) {
+          console.warn('Hinweis: Tabelle visits existiert evtl. noch nicht.', visitError);
+      }
       allVisits = visitData || [];
 
       const select = document.getElementById('country-select');
@@ -369,7 +367,6 @@
             ${ratingStars ? `<div class="text-[10px] mt-1">${ratingStars}</div>` : ''}
             ${item.location ? `<div class="text-slate-400 text-[10px] mt-1">📍 ${item.location}</div>` : ''}
             ${item.notes ? `<div class="text-slate-400 mt-1">${item.notes}</div>` : ''}
-            ${item.proof_photo_url ? `<div class="mt-2"><img src="${item.proof_photo_url}" class="rounded h-16 w-16 object-cover border border-slate-600"></div>` : ''}
           `;
           listContainer.appendChild(div);
         });
@@ -391,8 +388,7 @@
         title: document.getElementById('form-title').value,
         status: document.getElementById('form-status').value,
         rating: parseInt(document.getElementById('form-rating').value) || 0,
-        notes: document.getElementById('form-notes').value,
-        // Die Spalte location existiert ggf. noch nicht, try/catch schützt die App
+        notes: document.getElementById('form-notes').value
       };
 
       const { data, error } = await supabaseClient.from('entries').insert([payload]).select();
@@ -409,18 +405,16 @@
 
     // MAP INITIALISIERUNG
     function initMap() {
-      if (map) return; // Nur einmal laden
+      if (map) return;
       map = L.map('map').setView([20, 0], 2);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
       }).addTo(map);
 
-      // Simple Marker für Länder (Demo-Koordinaten)
       if (countries.length > 0) {
         L.marker([36.2, 138.2]).addTo(map).bindPopup("Japan");
         L.marker([15.8, 100.9]).addTo(map).bindPopup("Thailand");
       }
-      // Workaround für Leaflet Render Bug in versteckten Tabs
       setTimeout(() => map.invalidateSize(), 300);
     }
 
@@ -459,6 +453,8 @@
         allVisits.push(data[0]);
         renderVisitsList();
         document.getElementById('country-stats-header').innerText = `${allVisits.filter(v => v.country_id === currentCountry.id).length} Besuche`;
+      } else if (error) {
+        alert("Bitte stelle sicher, dass die Tabelle 'visits' in Supabase über den SQL-Editor angelegt wurde.");
       }
     }
 
