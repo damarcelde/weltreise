@@ -75,34 +75,68 @@
     </section>
 
     <!-- TAB 2: REISEZENTRUM (Historie, Map, Stats) -->
-    <section id="tab-zentrum" class="tab-content hidden space-y-6">
-      <!-- Statistiken -->
-      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl flex justify-around text-center">
-        <div>
-          <p class="text-2xl font-bold text-emerald-400" id="stat-world">0%</p>
-          <p class="text-[10px] text-slate-400 uppercase">Welt entdeckt</p>
+    <section id="tab-zentrum" class="tab-content hidden space-y-5">
+      
+      <!-- Haupterfolgs-Board -->
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-4">
+        <div class="flex justify-around text-center">
+          <div>
+            <p class="text-2xl font-extrabold text-emerald-400" id="stat-world">0%</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Welt entdeckt</p>
+          </div>
+          <div class="border-x border-slate-700/60 px-4">
+            <p class="text-2xl font-extrabold text-emerald-400" id="stat-visited-countries">0</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Länder bereist</p>
+          </div>
+          <div>
+            <p class="text-2xl font-extrabold text-emerald-400" id="stat-days-abroad">0</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tage auf Reise</p>
+          </div>
         </div>
-        <div>
-          <p class="text-2xl font-bold text-emerald-400" id="stat-countries">0</p>
-          <p class="text-[10px] text-slate-400 uppercase">Länder bereist</p>
+
+        <!-- Fortschrittsbalken Erlebnisse -->
+        <div class="pt-2 border-t border-slate-700/50">
+          <div class="flex justify-between items-center text-xs mb-1.5">
+            <span class="text-slate-300 font-medium">Erlebnis-Fortschritt</span>
+            <span class="text-emerald-400 font-bold" id="stat-completed-entries">0 / 0 erlebt</span>
+          </div>
+          <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-700/80">
+            <div id="stat-progress-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
         </div>
-        <div>
-          <p class="text-2xl font-bold text-emerald-400" id="stat-entries">0</p>
-          <p class="text-[10px] text-slate-400 uppercase">Erlebnisse</p>
+      </div>
+
+      <!-- Erlebnisse Status-Aufschlüsselung & Top-Kategorie -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-slate-800 rounded-xl p-3 border border-slate-700/60 shadow-md">
+          <p class="text-[10px] uppercase text-slate-400 font-semibold mb-1">Status-Aufteilung</p>
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between"><span class="text-emerald-400">✅ Erlebt:</span> <span class="font-bold" id="stat-count-erlebt">0</span></div>
+            <div class="flex justify-between"><span class="text-amber-400">⏳ In Planung:</span> <span class="font-bold" id="stat-count-planung">0</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">⭕ Offen:</span> <span class="font-bold" id="stat-count-offen">0</span></div>
+          </div>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl p-3 border border-slate-700/60 shadow-md flex flex-col justify-between">
+          <p class="text-[10px] uppercase text-slate-400 font-semibold">Top-Kategorie</p>
+          <div id="stat-top-category" class="text-xs font-bold text-slate-200 my-auto">
+            -
+          </div>
+          <p class="text-[9px] text-slate-500" id="stat-top-category-sub">Meiste absolvierte Abenteuer</p>
         </div>
       </div>
 
       <!-- Interaktive Weltkarte -->
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl">
-        <h2 class="text-sm font-bold mb-3 flex items-center gap-2">🗺️ Interaktive Karte</h2>
-        <div id="map" class="h-64 w-full rounded-xl z-10 border border-slate-700"></div>
+        <h2 class="text-sm font-bold mb-3 flex items-center gap-2">🗺️ Interaktive Karte (Bereiste Länder)</h2>
+        <div id="map" class="h-60 w-full rounded-xl z-10 border border-slate-700"></div>
       </div>
 
       <!-- Besuchshistorie -->
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-sm font-bold flex items-center gap-2">📅 Besuchshistorie</h2>
-          <button onclick="addVisitPrompt()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium">+ Besuch</button>
+          <button onclick="addVisitPrompt()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium shadow">+ Besuch</button>
         </div>
         <div id="visits-list" class="space-y-2">
           <p class="text-xs text-slate-500 italic">Keine Besuche eingetragen.</p>
@@ -181,14 +215,12 @@
         <div>
           <label class="block text-xs text-slate-400 mb-1">Land auswählen</label>
           <select id="form-country-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-            <!-- Wird dynamisch befüllt -->
           </select>
         </div>
 
         <div>
           <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
           <select id="form-category-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-            <!-- Wird dynamisch befüllt -->
           </select>
         </div>
 
@@ -271,7 +303,32 @@
     let allEntries = [];
     let allVisits = [];
     let map = null;
+    let mapMarkers = [];
     let exchangeRates = { EUR: 1, THB: 38.5, JPY: 160.2, USD: 1.08, VND: 27000, KRW: 1450, CNY: 7.8, KHR: 4400, PHP: 62, MYR: 5.0, LAK: 23000, MMK: 2300, HKD: 8.5, TWD: 35, SGD: 1.45, IDR: 17000, MOP: 8.7, MNT: 3700, KPW: 980, BND: 1.45, PGK: 4.2 };
+
+    // Koordinaten der Länder für die Karte
+    const countryCoords = {
+      'Japan': [36.2048, 138.2529],
+      'Südkorea': [35.9078, 127.7669],
+      'China': [35.8617, 104.1954],
+      'Vietnam': [14.0583, 108.2772],
+      'Kambodscha': [12.5657, 104.9910],
+      'Thailand': [15.8700, 100.9925],
+      'Philippinen': [12.8797, 121.7740],
+      'Malaysia': [4.2105, 101.9758],
+      'Laos': [19.8563, 102.4955],
+      'Myanmar': [21.9162, 95.9560],
+      'Hong Kong': [22.3193, 114.1694],
+      'Taiwan': [23.6978, 120.9605],
+      'Singapur': [1.3521, 103.8198],
+      'Indonesien': [-0.7893, 113.9213],
+      'Macau': [22.1987, 113.5439],
+      'Mongolei': [46.8625, 103.8467],
+      'Nordkorea': [40.3399, 127.5101],
+      'Brunei': [4.5353, 114.7277],
+      'Osttimor': [-8.8742, 125.7275],
+      'Papua-Neuguinea': [-6.3149, 143.9555]
+    };
 
     window.addEventListener('DOMContentLoaded', async () => {
       await loadInitialData();
@@ -291,11 +348,10 @@
       if (visitError) console.warn('Hinweis: visits-Tabelle fehlt eventuell.', visitError);
       allVisits = visitData || [];
 
-      // Header Dropdown befüllen
+      // Dropdowns befüllen
       const select = document.getElementById('country-select');
       select.innerHTML = '';
       
-      // Formular Dropdowns initialisieren
       const formCountrySelect = document.getElementById('form-country-select');
       const formCatSelect = document.getElementById('form-category-select');
       formCountrySelect.innerHTML = '';
@@ -342,19 +398,71 @@
       renderVisitsList();
     }
 
+    // STATISTIKEN & DASHBOARD BERECHNUNG
     function calculateGlobalStats() {
-      const uniqueCountries = new Set(allEntries.map(e => e.country_id)).size;
-      const totalEntries = allEntries.length;
-      const worldPercent = ((uniqueCountries / 195) * 100).toFixed(1);
+      // 1. Bereiste Länder bestimmen: Entweder Visit eingetragen ODER min. 1 'erlebtes' Abenteuer
+      const visitCountryIds = new Set(allVisits.map(v => v.country_id));
+      const experiencedCountryIds = new Set(allEntries.filter(e => e.status === 'erlebt').map(e => e.country_id));
+      
+      const visitedCountryIds = new Set([...visitCountryIds, ...experiencedCountryIds]);
+      const visitedCount = visitedCountryIds.size;
+      const worldPercent = ((visitedCount / 195) * 100).toFixed(1);
 
+      // 2. Erlebnisse Aufschlüsselung
+      const totalEntries = allEntries.length;
+      const erlebtEntries = allEntries.filter(e => e.status === 'erlebt').length;
+      const planungEntries = allEntries.filter(e => e.status === 'in_planung').length;
+      const offenEntries = allEntries.filter(e => e.status === 'offen' || !e.status).length;
+      
+      const progressPercent = totalEntries > 0 ? Math.round((erlebtEntries / totalEntries) * 100) : 0;
+
+      // 3. Tage im Ausland berechnen aus Visits
+      let totalDaysAbroad = 0;
+      allVisits.forEach(v => {
+        if (v.start_date) {
+          const start = new Date(v.start_date);
+          const end = v.end_date ? new Date(v.end_date) : new Date();
+          const diffTime = Math.abs(end - start);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          totalDaysAbroad += isNaN(diffDays) ? 0 : diffDays;
+        }
+      });
+
+      // 4. Top Kategorie ermitteln
+      const catCounts = {};
+      allEntries.filter(e => e.status === 'erlebt').forEach(e => {
+        catCounts[e.category_id] = (catCounts[e.category_id] || 0) + 1;
+      });
+      let topCatId = Object.keys(catCounts).reduce((a, b) => catCounts[a] > catCounts[b] ? a : b, null);
+      let topCat = categories.find(c => c.id == topCatId);
+
+      // DOM Updates
       document.getElementById('stat-world').innerText = `${worldPercent}%`;
-      document.getElementById('stat-countries').innerText = uniqueCountries;
-      document.getElementById('stat-entries').innerText = totalEntries;
+      document.getElementById('stat-visited-countries').innerText = visitedCount;
+      document.getElementById('stat-days-abroad').innerText = totalDaysAbroad;
+      
+      document.getElementById('stat-completed-entries').innerText = `${erlebtEntries} / ${totalEntries} erlebt`;
+      document.getElementById('stat-progress-bar').style.width = `${progressPercent}%`;
+
+      document.getElementById('stat-count-erlebt').innerText = erlebtEntries;
+      document.getElementById('stat-count-planung').innerText = planungEntries;
+      document.getElementById('stat-count-offen').innerText = offenEntries;
+
+      if (topCat) {
+        document.getElementById('stat-top-category').innerText = `${topCat.icon} ${topCat.title}`;
+        document.getElementById('stat-top-category-sub').innerText = `${catCounts[topCatId]} Abenteuer gemeistert`;
+      } else {
+        document.getElementById('stat-top-category').innerText = 'Noch keine';
+        document.getElementById('stat-top-category-sub').innerText = 'Erlebnisse auf ✅ Erlebt stellen';
+      }
+
+      // Karte aktualisieren
+      updateMapMarkers(visitedCountryIds);
     }
 
     // MAPS LINK ÖFFNEN
     function openMaps(locationText, event) {
-      if (event) event.stopPropagation(); // Verhindert das Öffnen des Bearbeiten-Modals bei Klick auf den Link
+      if (event) event.stopPropagation();
       const query = encodeURIComponent(`${locationText}, ${currentCountry ? currentCountry.name : ''}`);
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
     }
@@ -362,11 +470,8 @@
     function toggleFormMapsBtn() {
       const val = document.getElementById('form-location').value.trim();
       const btn = document.getElementById('form-maps-btn');
-      if (val) {
-        btn.classList.remove('hidden');
-      } else {
-        btn.classList.add('hidden');
-      }
+      if (val) btn.classList.remove('hidden');
+      else btn.classList.add('hidden');
     }
 
     function openFormLocationInMaps() {
@@ -379,7 +484,7 @@
       }
     }
 
-    // MATRIX TABELLE RENDERN (MIT ORTSANGABE UNTER DEM TITEL & MAPS LINK)
+    // MATRIX TABELLE RENDERN
     function renderMatrixTable() {
       const tbody = document.getElementById('matrix-table-body');
       tbody.innerHTML = '';
@@ -395,15 +500,12 @@
 
       countryEntries.forEach(item => {
         const category = categories.find(c => c.id === item.category_id) || { icon: '📌', id: '?' };
-        
-        // Titel gekürzt für die Tabellenansicht
         const shortTitle = item.title.length > 35 ? item.title.substring(0, 35) + '...' : item.title;
 
-        // Status Styling
         let statusBadge = '<span class="px-2 py-0.5 text-[9px] rounded font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">✅ Erlebt</span>';
         if (item.status === 'in_planung') {
           statusBadge = '<span class="px-2 py-0.5 text-[9px] rounded font-semibold bg-amber-950 text-amber-400 border border-amber-800">⏳ Geplant</span>';
-        } else if (item.status === 'offen') {
+        } else if (item.status === 'offen' || !item.status) {
           statusBadge = '<span class="px-2 py-0.5 text-[9px] rounded font-semibold bg-slate-800 text-slate-400 border border-slate-700">⭕ Offen</span>';
         }
 
@@ -461,25 +563,25 @@
       document.getElementById('entry-sheet').classList.add('hidden');
     }
 
-    // SPEICHERN (INSERT ODER UPDATE)
+    // SPEICHERN MIT BEHEBUNGEN FÜR NULL-VALUES (BEHEBT RATING CHECK CONSTRAINT FEHLER)
     async function saveEntry(event) {
       event.preventDefault();
 
       const entryId = document.getElementById('form-entry-id').value;
       const countryId = document.getElementById('form-country-select').value;
+      const ratingValue = parseInt(document.getElementById('form-rating').value);
       
       const payload = {
         country_id: countryId,
         category_id: parseInt(document.getElementById('form-category-select').value),
         title: document.getElementById('form-title').value,
         status: document.getElementById('form-status').value,
-        rating: parseInt(document.getElementById('form-rating').value) || 0,
-        location: document.getElementById('form-location').value,
-        notes: document.getElementById('form-notes').value
+        rating: ratingValue > 0 ? ratingValue : null, // sendet NULL statt 0
+        location: document.getElementById('form-location').value || null,
+        notes: document.getElementById('form-notes').value || null
       };
 
       if (entryId) {
-        // UPDATE bestehender Eintrag
         const { error } = await supabaseClient.from('entries').update(payload).eq('id', entryId);
         if (error) {
           alert('Fehler beim Aktualisieren: ' + error.message);
@@ -488,7 +590,6 @@
         const index = allEntries.findIndex(e => e.id == entryId);
         if (index !== -1) allEntries[index] = { ...allEntries[index], ...payload };
       } else {
-        // INSERT neuer Eintrag
         const { data, error } = await supabaseClient.from('entries').insert([payload]).select();
         if (error) {
           alert('Fehler beim Erstellen: ' + error.message);
@@ -510,17 +611,32 @@
 
     // MAP INITIALISIERUNG
     function initMap() {
-      if (map) return;
-      map = L.map('map').setView([20, 0], 2);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
-
-      if (countries.length > 0) {
-        L.marker([36.2, 138.2]).addTo(map).bindPopup("Japan");
-        L.marker([15.8, 100.9]).addTo(map).bindPopup("Thailand");
+      if (!map) {
+        map = L.map('map').setView([20, 100], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
       }
+
+      const visitCountryIds = new Set(allVisits.map(v => v.country_id));
+      const experiencedCountryIds = new Set(allEntries.filter(e => e.status === 'erlebt').map(e => e.country_id));
+      updateMapMarkers(new Set([...visitCountryIds, ...experiencedCountryIds]));
+
       setTimeout(() => map.invalidateSize(), 300);
+    }
+
+    function updateMapMarkers(visitedCountryIds) {
+      if (!map) return;
+      
+      mapMarkers.forEach(m => map.removeLayer(m));
+      mapMarkers = [];
+
+      countries.forEach(c => {
+        if (visitedCountryIds.has(c.id) && countryCoords[c.name]) {
+          const marker = L.marker(countryCoords[c.name]).addTo(map).bindPopup(`<b>${c.flag_emoji || '🏳️'} ${c.name}</b><br>Bereist!`);
+          mapMarkers.push(marker);
+        }
+      });
     }
 
     // BESUCHSHISTORIE
@@ -549,13 +665,21 @@
       const title = prompt("Besuch Name (z.B. Herbst-Trip 2026):");
       if(!title) return;
       const start = prompt("Startdatum (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+      const end = prompt("Enddatum (YYYY-MM-DD, optional):", "");
       
-      const { data, error } = await supabaseClient.from('visits').insert([{
-        country_id: currentCountry.id, title: title, start_date: start, travel_type: 'Backpacking'
-      }]).select();
+      const payload = {
+        country_id: currentCountry.id,
+        title: title,
+        start_date: start,
+        end_date: end || null,
+        travel_type: 'Backpacking'
+      };
+
+      const { data, error } = await supabaseClient.from('visits').insert([payload]).select();
 
       if(!error && data) {
         allVisits.push(data[0]);
+        calculateGlobalStats();
         renderVisitsList();
         document.getElementById('country-stats-header').innerText = `${allVisits.filter(v => v.country_id === currentCountry.id).length} Besuche`;
       }
