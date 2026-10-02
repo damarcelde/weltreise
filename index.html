@@ -46,16 +46,36 @@
 
   <main class="max-w-md mx-auto p-4">
 
-    <!-- TAB 1: MATRIX -->
+    <!-- TAB 1: MATRIX (TABELLENANSICHT) -->
     <section id="tab-matrix" class="tab-content">
-      <div id="matrix-grid" class="grid grid-cols-2 gap-3">
-        <p class="col-span-2 text-center text-slate-500 py-12">Lade Matrix-Daten...</p>
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-sm font-bold text-slate-300">Reise-Erlebnisse & Matrix</h2>
+        <button onclick="openNewEntryModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+          + Erlebnis
+        </button>
+      </div>
+
+      <!-- Tabelle mit Erlebnissen -->
+      <div class="bg-slate-800 rounded-xl border border-slate-700/60 overflow-hidden shadow-xl">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950/60 text-slate-400 uppercase text-[10px] border-b border-slate-700/60">
+            <tr>
+              <th class="p-2.5 w-10 text-center">Kat</th>
+              <th class="p-2.5">Erlebnis</th>
+              <th class="p-2.5 text-right w-24">Status</th>
+            </tr>
+          </thead>
+          <tbody id="matrix-table-body" class="divide-y divide-slate-700/40">
+            <tr>
+              <td colspan="3" class="text-center text-slate-500 py-8">Lade Erlebnisse...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
     <!-- TAB 2: REISEZENTRUM (Historie, Map, Stats) -->
     <section id="tab-zentrum" class="tab-content hidden space-y-6">
-      
       <!-- Statistiken -->
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl flex justify-around text-center">
         <div>
@@ -78,7 +98,7 @@
         <div id="map" class="h-64 w-full rounded-xl z-10 border border-slate-700"></div>
       </div>
 
-      <!-- Besuchshistorie & Timeline -->
+      <!-- Besuchshistorie -->
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-sm font-bold flex items-center gap-2">📅 Besuchshistorie</h2>
@@ -147,20 +167,31 @@
 
   </main>
 
-  <!-- ERWEITERTES EINGABE MODAL (BOTTOM SHEET) -->
+  <!-- BEARBEITEN & EINGABE MODAL (BOTTOM SHEET) -->
   <div id="entry-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
-        <h3 id="sheet-title" class="text-lg font-bold text-slate-100">Kategorie</h3>
+        <h3 id="sheet-title" class="text-lg font-bold text-slate-100">Erlebnis bearbeiten</h3>
         <button onclick="closeEntrySheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
       </div>
-      
-      <div id="sheet-entries-list" class="space-y-3 mb-6"></div>
-      <hr class="border-slate-800 mb-4">
 
       <form id="entry-form" onsubmit="saveEntry(event)" class="space-y-4">
-        <input type="hidden" id="form-category-id">
+        <input type="hidden" id="form-entry-id">
         
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Land auswählen</label>
+          <select id="form-country-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+            <!-- Wird dynamisch befüllt -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
+          <select id="form-category-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+            <!-- Wird dynamisch befüllt -->
+          </select>
+        </div>
+
         <div>
           <label class="block text-xs text-slate-400 mb-1">Titel / Erlebnis</label>
           <input type="text" id="form-title" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
@@ -189,17 +220,17 @@
         </div>
 
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Ort / GPS (Optional)</label>
-          <input type="text" id="form-location" placeholder="Z.B. Shibuya, Tokio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+          <label class="block text-xs text-slate-400 mb-1">Ort / Region (Optional)</label>
+          <input type="text" id="form-location" placeholder="z. B. Shibuya, Tokio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
         </div>
 
         <div>
           <label class="block text-xs text-slate-400 mb-1">Notizen & Details</label>
-          <textarea id="form-notes" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea>
+          <textarea id="form-notes" rows="3" placeholder="Besondere Erinnerungen, Kosten, Tipps..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea>
         </div>
 
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
-          Eintrag Speichern
+          Speichern
         </button>
       </form>
     </div>
@@ -248,25 +279,40 @@
       const { data: countryData } = await supabaseClient.from('countries').select('*').order('name');
       countries = countryData || [];
 
-      // Alle Einträge für globale Statistiken laden
-      const { data: entryData } = await supabaseClient.from('entries').select('*');
+      const { data: entryData } = await supabaseClient.from('entries').select('*').order('id');
       allEntries = entryData || [];
 
-      // Fehlerbereinigte Abfrage für die Besuche (ohne .catch())
       const { data: visitData, error: visitError } = await supabaseClient.from('visits').select('*');
-      if (visitError) {
-          console.warn('Hinweis: Tabelle visits existiert evtl. noch nicht.', visitError);
-      }
+      if (visitError) console.warn('Hinweis: visits-Tabelle fehlt eventuell.', visitError);
       allVisits = visitData || [];
 
+      // Header Dropdown befüllen
       const select = document.getElementById('country-select');
       select.innerHTML = '';
+      
+      // Formular Dropdowns initialisieren
+      const formCountrySelect = document.getElementById('form-country-select');
+      const formCatSelect = document.getElementById('form-category-select');
+      formCountrySelect.innerHTML = '';
+      formCatSelect.innerHTML = '';
+
       countries.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
         opt.className = 'bg-slate-900 text-white';
         opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
         select.appendChild(opt);
+
+        const optForm = opt.cloneNode(true);
+        formCountrySelect.appendChild(optForm);
+      });
+
+      categories.forEach(cat => {
+        const optCat = document.createElement('option');
+        optCat.value = cat.id;
+        optCat.className = 'bg-slate-900 text-white';
+        optCat.innerText = `${cat.icon} #${cat.id} - ${cat.title}`;
+        formCatSelect.appendChild(optCat);
       });
 
       if (countries.length > 0) {
@@ -286,7 +332,7 @@
       const countryVisits = allVisits.filter(v => v.country_id === currentCountry.id).length;
       document.getElementById('country-stats-header').innerText = `${countryVisits} Besuche`;
 
-      await renderMatrixGrid();
+      renderMatrixTable();
       await loadVocabulary();
       renderVisitsList();
     }
@@ -301,105 +347,127 @@
       document.getElementById('stat-entries').innerText = totalEntries;
     }
 
-    async function renderMatrixGrid() {
-      const grid = document.getElementById('matrix-grid');
-      grid.innerHTML = '';
+    // MATRIX TABELLE RENDERN (MIT SHORT TITLE & ICON)
+    function renderMatrixTable() {
+      const tbody = document.getElementById('matrix-table-body');
+      tbody.innerHTML = '';
+
       if (!currentCountry) return;
 
       const countryEntries = allEntries.filter(e => e.country_id === currentCountry.id);
 
-      categories.forEach(cat => {
-        const catEntries = countryEntries.filter(e => e.category_id === cat.id);
-        const count = catEntries.length;
-        const hasCompleted = catEntries.some(e => e.status === 'erlebt');
+      if (countryEntries.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center text-slate-500 py-8">Keine Erlebnisse für ${currentCountry.name} hinterlegt.</td></tr>`;
+        return;
+      }
 
-        const card = document.createElement('div');
-        card.onclick = () => openEntrySheet(cat, catEntries);
-        card.className = `bg-slate-800/80 border ${hasCompleted ? 'border-emerald-500/60 bg-emerald-950/20' : 'border-slate-700/60'} rounded-xl p-3 flex flex-col justify-between active:scale-95 transition cursor-pointer shadow-md relative overflow-hidden`;
+      countryEntries.forEach(item => {
+        const category = categories.find(c => c.id === item.category_id) || { icon: '📌', id: '?' };
         
-        // Status Indikator Balken
-        const statusBar = hasCompleted ? '<div class="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>' : '';
+        // Titel einkürzen (z. B. max 35 Zeichen)
+        const shortTitle = item.title.length > 35 ? item.title.substring(0, 35) + '...' : item.title;
 
-        card.innerHTML = `
-          ${statusBar}
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-2xl">${cat.icon}</span>
-              <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${count > 0 ? 'bg-slate-700 text-emerald-400' : 'bg-slate-700 text-slate-400'}">
-                #${cat.id}
-              </span>
-            </div>
-            <h3 class="text-xs font-semibold text-slate-100 line-clamp-1">${cat.title}</h3>
-            <p class="text-[10px] text-slate-400 mt-1 line-clamp-2 leading-tight">${cat.description}</p>
-          </div>
-          <div class="mt-2 pt-1.5 border-t border-slate-700/40 flex justify-between items-center text-[10px]">
-            <span class="${count > 0 ? 'text-emerald-400 font-bold' : 'text-slate-500'}">${count} ${count === 1 ? 'Eintrag' : 'Einträge'}</span>
-            <span class="text-slate-500">→</span>
-          </div>
+        // Status Styling
+        let statusBadge = '<span class="px-2 py-0.5 text-[9px] rounded font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">✅ Erlebt</span>';
+        if (item.status === 'in_planung') {
+          statusBadge = '<span class="px-2 py-0.5 text-[9px] rounded font-semibold bg-amber-950 text-amber-400 border border-amber-800">⏳ Geplant</span>';
+        } else if (item.status === 'offen') {
+          statusBadge = '<span class="px-2 py-0.5 text-[9px] rounded font-semibold bg-slate-800 text-slate-400 border border-slate-700">⭕ Offen</span>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.onclick = () => openEditEntryModal(item);
+        tr.className = 'hover:bg-slate-700/40 active:bg-slate-700/60 cursor-pointer transition';
+
+        tr.innerHTML = `
+          <td class="p-2.5 text-center text-base">${category.icon}</td>
+          <td class="p-2.5">
+            <div class="font-medium text-slate-100">${shortTitle}</div>
+            ${item.location ? `<div class="text-[10px] text-slate-400">📍 ${item.location}</div>` : ''}
+          </td>
+          <td class="p-2.5 text-right whitespace-nowrap">${statusBadge}</td>
         `;
-        grid.appendChild(card);
+        tbody.appendChild(tr);
       });
     }
 
-    function openEntrySheet(category, catEntries) {
-      activeCategory = category;
-      document.getElementById('sheet-title').innerText = `${category.icon} ${category.title}`;
-      document.getElementById('form-category-id').value = category.id;
-
-      const listContainer = document.getElementById('sheet-entries-list');
-      listContainer.innerHTML = '';
-
-      if (catEntries.length === 0) {
-        listContainer.innerHTML = `<p class="text-xs text-slate-500 italic">Noch keine Einträge für ${currentCountry.name}.</p>`;
-      } else {
-        catEntries.forEach(item => {
-          const div = document.createElement('div');
-          div.className = 'bg-slate-800 p-2.5 rounded-lg border border-slate-700 text-xs';
-          
-          let statusColor = item.status === 'in_planung' ? 'text-amber-400' : item.status === 'offen' ? 'text-rose-400' : 'text-emerald-400';
-          let ratingStars = item.rating > 0 ? '⭐'.repeat(item.rating) : '';
-
-          div.innerHTML = `
-            <div class="flex justify-between">
-              <span class="font-bold text-slate-200">${item.title}</span>
-              <span class="${statusColor} uppercase text-[9px] font-bold">${item.status || 'erlebt'}</span>
-            </div>
-            ${ratingStars ? `<div class="text-[10px] mt-1">${ratingStars}</div>` : ''}
-            ${item.location ? `<div class="text-slate-400 text-[10px] mt-1">📍 ${item.location}</div>` : ''}
-            ${item.notes ? `<div class="text-slate-400 mt-1">${item.notes}</div>` : ''}
-          `;
-          listContainer.appendChild(div);
-        });
+    // MODAL FÜR EIN NEUES ERLEBNIS (NEU)
+    function openNewEntryModal() {
+      document.getElementById('sheet-title').innerText = '+ Neues Erlebnis anlegen';
+      document.getElementById('entry-form').reset();
+      document.getElementById('form-entry-id').value = '';
+      
+      if (currentCountry) {
+        document.getElementById('form-country-select').value = currentCountry.id;
       }
+
+      document.getElementById('entry-sheet').classList.remove('hidden');
+    }
+
+    // MODAL ZUM BEARBEITEN
+    function openEditEntryModal(item) {
+      document.getElementById('sheet-title').innerText = 'Erlebnis bearbeiten';
+      document.getElementById('form-entry-id').value = item.id;
+      document.getElementById('form-country-select').value = item.country_id;
+      document.getElementById('form-category-select').value = item.category_id;
+      document.getElementById('form-title').value = item.title;
+      document.getElementById('form-status').value = item.status || 'erlebt';
+      document.getElementById('form-rating').value = item.rating || 0;
+      document.getElementById('form-location').value = item.location || '';
+      document.getElementById('form-notes').value = item.notes || '';
+
       document.getElementById('entry-sheet').classList.remove('hidden');
     }
 
     function closeEntrySheet() {
       document.getElementById('entry-sheet').classList.add('hidden');
-      document.getElementById('entry-form').reset();
     }
 
+    // SPEICHERN (INSERT ODER UPDATE)
     async function saveEntry(event) {
       event.preventDefault();
+
+      const entryId = document.getElementById('form-entry-id').value;
+      const countryId = document.getElementById('form-country-select').value;
       
       const payload = {
-        country_id: currentCountry.id,
-        category_id: parseInt(document.getElementById('form-category-id').value),
+        country_id: countryId,
+        category_id: parseInt(document.getElementById('form-category-select').value),
         title: document.getElementById('form-title').value,
         status: document.getElementById('form-status').value,
         rating: parseInt(document.getElementById('form-rating').value) || 0,
+        location: document.getElementById('form-location').value,
         notes: document.getElementById('form-notes').value
       };
 
-      const { data, error } = await supabaseClient.from('entries').insert([payload]).select();
-
-      if (error) {
-        alert('Fehler beim Speichern: ' + error.message);
+      if (entryId) {
+        // UPDATE bestehender Eintrag
+        const { error } = await supabaseClient.from('entries').update(payload).eq('id', entryId);
+        if (error) {
+          alert('Fehler beim Aktualisieren: ' + error.message);
+          return;
+        }
+        const index = allEntries.findIndex(e => e.id == entryId);
+        if (index !== -1) allEntries[index] = { ...allEntries[index], ...payload };
       } else {
-        allEntries.push(data[0]);
-        calculateGlobalStats();
-        closeEntrySheet();
-        await renderMatrixGrid();
+        // INSERT neuer Eintrag
+        const { data, error } = await supabaseClient.from('entries').insert([payload]).select();
+        if (error) {
+          alert('Fehler beim Erstellen: ' + error.message);
+          return;
+        }
+        if (data) allEntries.push(data[0]);
+      }
+
+      calculateGlobalStats();
+      closeEntrySheet();
+
+      // Wechselt auf das betroffene Land, falls im Formular ein anderes ausgewählt wurde
+      if (countryId !== currentCountry?.id) {
+        document.getElementById('country-select').value = countryId;
+        await changeCountry(countryId);
+      } else {
+        renderMatrixTable();
       }
     }
 
@@ -453,8 +521,6 @@
         allVisits.push(data[0]);
         renderVisitsList();
         document.getElementById('country-stats-header').innerText = `${allVisits.filter(v => v.country_id === currentCountry.id).length} Besuche`;
-      } else if (error) {
-        alert("Bitte stelle sicher, dass die Tabelle 'visits' in Supabase über den SQL-Editor angelegt wurde.");
       }
     }
 
