@@ -144,21 +144,71 @@
       </div>
     </section>
 
-    <!-- TAB 3: WÄHRUNGSRECHNER -->
-    <section id="tab-rechner" class="tab-content hidden">
-      <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/60 shadow-xl">
-        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">💱 Währungsrechner</h2>
-        <div class="space-y-4">
+    <!-- TAB 3: WÄHRUNGSRECHNER (TASCHENRECHNER STYLE) -->
+    <section id="tab-rechner" class="tab-content hidden space-y-4">
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl">
+        
+        <!-- Wechselkurs Infobox -->
+        <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700/50 mb-4 flex justify-between items-center">
           <div>
-            <label class="block text-xs text-slate-400 mb-1" id="label-local-curr">Betrag in Landeswährung</label>
-            <input type="number" id="calc-input-local" oninput="convertCurrency('local')" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xl font-mono text-emerald-400 focus:outline-none focus:border-emerald-500">
+            <p class="text-[10px] text-slate-400 uppercase font-semibold">Aktueller Wechselkurs</p>
+            <p class="text-sm font-mono font-bold text-emerald-400 mt-0.5" id="calc-rate-info">1 EUR = --</p>
           </div>
-          <div class="flex justify-center"><span class="text-xl text-slate-500">⇅</span></div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Betrag in Euro (€)</label>
-            <input type="number" id="calc-input-eur" oninput="convertCurrency('eur')" placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xl font-mono text-white focus:outline-none focus:border-emerald-500">
+          <div class="text-right">
+            <span class="text-xs font-bold text-slate-300" id="calc-curr-name">Lade Währung...</span>
+            <p class="text-[9px] text-slate-500 uppercase font-mono" id="calc-curr-code">EUR</p>
           </div>
         </div>
+
+        <!-- Eingabefelder im Konverter-Style -->
+        <div class="space-y-3">
+          
+          <!-- Eingabe Landeswährung -->
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/80 focus-within:border-emerald-500 transition">
+            <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
+              <span id="calc-label-local">Landeswährung</span>
+              <button onclick="clearCalc()" class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-rose-400 hover:bg-slate-700">C Clear</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="number" id="calc-input-local" oninput="convertCurrency('local')" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-emerald-400 font-bold focus:outline-none">
+              <span class="text-sm font-mono text-slate-400 font-bold" id="calc-symbol-local">---</span>
+            </div>
+          </div>
+
+          <!-- Quick Swap Icon -->
+          <div class="flex justify-center -my-1">
+            <div class="bg-slate-800 border border-slate-700 p-1.5 rounded-full text-slate-400 text-xs shadow-md">
+              ⇅
+            </div>
+          </div>
+
+          <!-- Eingabe Euro (€) -->
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/80 focus-within:border-emerald-500 transition">
+            <div class="text-xs text-slate-400 mb-1">Betrag in Euro</div>
+            <div class="flex items-center gap-2">
+              <input type="number" id="calc-input-eur" oninput="convertCurrency('eur')" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white font-bold focus:outline-none">
+              <span class="text-sm font-mono text-slate-400 font-bold">EUR (€)</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Intuitives Keypad / Schnellauswahl-Buttons -->
+        <div class="mt-4 pt-3 border-t border-slate-700/50">
+          <p class="text-[10px] text-slate-400 uppercase font-semibold mb-2">Schnell-Tasten (Landeswährung)</p>
+          <div class="grid grid-cols-4 gap-2 text-xs font-mono">
+            <button onclick="addQuickAmount(10)" class="bg-slate-700/60 hover:bg-slate-700 text-slate-200 py-2 rounded-lg font-bold border border-slate-600/40 active:scale-95 transition">+10</button>
+            <button onclick="addQuickAmount(50)" class="bg-slate-700/60 hover:bg-slate-700 text-slate-200 py-2 rounded-lg font-bold border border-slate-600/40 active:scale-95 transition">+50</button>
+            <button onclick="addQuickAmount(100)" class="bg-slate-700/60 hover:bg-slate-700 text-slate-200 py-2 rounded-lg font-bold border border-slate-600/40 active:scale-95 transition">+100</button>
+            <button onclick="addQuickAmount(500)" class="bg-slate-700/60 hover:bg-slate-700 text-slate-200 py-2 rounded-lg font-bold border border-slate-600/40 active:scale-95 transition">+500</button>
+            
+            <button onclick="multiplyQuickAmount(2)" class="bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 py-2 rounded-lg font-bold border border-emerald-800/40 active:scale-95 transition">×2</button>
+            <button onclick="multiplyQuickAmount(5)" class="bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 py-2 rounded-lg font-bold border border-emerald-800/40 active:scale-95 transition">×5</button>
+            <button onclick="multiplyQuickAmount(10)" class="bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 py-2 rounded-lg font-bold border border-emerald-800/40 active:scale-95 transition">×10</button>
+            <button onclick="clearCalc()" class="bg-rose-950/40 hover:bg-rose-900/50 text-rose-400 py-2 rounded-lg font-bold border border-rose-800/40 active:scale-95 transition">DEL</button>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -304,9 +354,33 @@
     let allVisits = [];
     let map = null;
     let mapMarkers = [];
-    let exchangeRates = { EUR: 1, THB: 38.5, JPY: 160.2, USD: 1.08, VND: 27000, KRW: 1450, CNY: 7.8, KHR: 4400, PHP: 62, MYR: 5.0, LAK: 23000, MMK: 2300, HKD: 8.5, TWD: 35, SGD: 1.45, IDR: 17000, MOP: 8.7, MNT: 3700, KPW: 980, BND: 1.45, PGK: 4.2 };
 
-    // Koordinaten der Länder für die Karte
+    // Wechselkurse & Währungsnamen
+    const exchangeData = {
+      THB: { rate: 38.50, name: 'Thailändischer Baht' },
+      JPY: { rate: 160.20, name: 'Japanischer Yen' },
+      USD: { rate: 1.08, name: 'US-Dollar' },
+      VND: { rate: 27000.0, name: 'Vietnamesischer Dong' },
+      KRW: { rate: 1450.0, name: 'Südkoreanischer Won' },
+      CNY: { rate: 7.80, name: 'Chinesischer Yuan' },
+      KHR: { rate: 4400.0, name: 'Kambodschanischer Riel' },
+      PHP: { rate: 62.0, name: 'Philippinischer Peso' },
+      MYR: { rate: 5.00, name: 'Malaysischer Ringgit' },
+      LAK: { rate: 23000.0, name: 'Laotischer Kip' },
+      MMK: { rate: 2300.0, name: 'Kyat (Myanmar)' },
+      HKD: { rate: 8.50, name: 'Hongkong-Dollar' },
+      TWD: { rate: 35.0, name: 'Neuer Taiwan-Dollar' },
+      SGD: { rate: 1.45, name: 'Singapur-Dollar' },
+      IDR: { rate: 17000.0, name: 'Indonesische Rupiah' },
+      MOP: { rate: 8.70, name: 'Macao-Pataca' },
+      MNT: { rate: 3700.0, name: 'Mongolischer Tögrög' },
+      KPW: { rate: 980.0, name: 'Nordkoreanischer Won' },
+      BND: { rate: 1.45, name: 'Brunei-Dollar' },
+      PGK: { rate: 4.20, name: 'Papua-Neuguineischer Kina' },
+      AUD: { rate: 1.65, name: 'Australischer Dollar' },
+      EUR: { rate: 1.00, name: 'Euro' }
+    };
+
     const countryCoords = {
       'Japan': [36.2048, 138.2529],
       'Südkorea': [35.9078, 127.7669],
@@ -388,19 +462,76 @@
 
       document.getElementById('current-flag').innerText = currentCountry.flag_emoji || '🌍';
       document.getElementById('safe-taboos').innerText = currentCountry.cat4_taboos || 'Keine speziellen Hinweise hinterlegt.';
-      document.getElementById('label-local-curr').innerText = `Betrag in ${currentCountry.currency_code || 'Lokalwährung'}`;
 
       const countryVisits = allVisits.filter(v => v.country_id === currentCountry.id).length;
       document.getElementById('country-stats-header').innerText = `${countryVisits} Besuche`;
+
+      // Währungsrechner auf neues Land aktualisieren
+      updateCalcCurrencyInfo();
 
       renderMatrixTable();
       await loadVocabulary();
       renderVisitsList();
     }
 
+    // WÄHRUNGSRECHNER LOGIK & ANZEIGE
+    function updateCalcCurrencyInfo() {
+      const code = currentCountry?.currency_code || 'USD';
+      const info = exchangeData[code] || { rate: 1.0, name: 'Auslandswährung' };
+
+      document.getElementById('calc-rate-info').innerText = `1 EUR = ${info.rate.toLocaleString('de-DE')} ${code}`;
+      document.getElementById('calc-curr-name').innerText = info.name;
+      document.getElementById('calc-curr-code').innerText = code;
+      document.getElementById('calc-symbol-local').innerText = code;
+      document.getElementById('calc-label-local').innerText = `Betrag in ${info.name}`;
+
+      convertCurrency('local');
+    }
+
+    function convertCurrency(source) {
+      const code = currentCountry?.currency_code || 'USD';
+      const rate = exchangeData[code]?.rate || 1.0;
+
+      if (source === 'local') {
+        const val = parseFloat(document.getElementById('calc-input-local').value);
+        if (isNaN(val) || val === 0) {
+          document.getElementById('calc-input-eur').value = '';
+        } else {
+          document.getElementById('calc-input-eur').value = (val / rate).toFixed(2);
+        }
+      } else {
+        const val = parseFloat(document.getElementById('calc-input-eur').value);
+        if (isNaN(val) || val === 0) {
+          document.getElementById('calc-input-local').value = '';
+        } else {
+          document.getElementById('calc-input-local').value = (val * rate).toFixed(2);
+        }
+      }
+    }
+
+    function addQuickAmount(amount) {
+      const input = document.getElementById('calc-input-local');
+      const currentVal = parseFloat(input.value) || 0;
+      input.value = currentVal + amount;
+      convertCurrency('local');
+    }
+
+    function multiplyQuickAmount(factor) {
+      const input = document.getElementById('calc-input-local');
+      const currentVal = parseFloat(input.value) || 0;
+      if (currentVal > 0) {
+        input.value = currentVal * factor;
+        convertCurrency('local');
+      }
+    }
+
+    function clearCalc() {
+      document.getElementById('calc-input-local').value = '';
+      document.getElementById('calc-input-eur').value = '';
+    }
+
     // STATISTIKEN & DASHBOARD BERECHNUNG
     function calculateGlobalStats() {
-      // 1. Bereiste Länder bestimmen: Entweder Visit eingetragen ODER min. 1 'erlebtes' Abenteuer
       const visitCountryIds = new Set(allVisits.map(v => v.country_id));
       const experiencedCountryIds = new Set(allEntries.filter(e => e.status === 'erlebt').map(e => e.country_id));
       
@@ -408,7 +539,6 @@
       const visitedCount = visitedCountryIds.size;
       const worldPercent = ((visitedCount / 195) * 100).toFixed(1);
 
-      // 2. Erlebnisse Aufschlüsselung
       const totalEntries = allEntries.length;
       const erlebtEntries = allEntries.filter(e => e.status === 'erlebt').length;
       const planungEntries = allEntries.filter(e => e.status === 'in_planung').length;
@@ -416,7 +546,6 @@
       
       const progressPercent = totalEntries > 0 ? Math.round((erlebtEntries / totalEntries) * 100) : 0;
 
-      // 3. Tage im Ausland berechnen aus Visits
       let totalDaysAbroad = 0;
       allVisits.forEach(v => {
         if (v.start_date) {
@@ -428,7 +557,6 @@
         }
       });
 
-      // 4. Top Kategorie ermitteln
       const catCounts = {};
       allEntries.filter(e => e.status === 'erlebt').forEach(e => {
         catCounts[e.category_id] = (catCounts[e.category_id] || 0) + 1;
@@ -436,7 +564,6 @@
       let topCatId = Object.keys(catCounts).reduce((a, b) => catCounts[a] > catCounts[b] ? a : b, null);
       let topCat = categories.find(c => c.id == topCatId);
 
-      // DOM Updates
       document.getElementById('stat-world').innerText = `${worldPercent}%`;
       document.getElementById('stat-visited-countries').innerText = visitedCount;
       document.getElementById('stat-days-abroad').innerText = totalDaysAbroad;
@@ -456,7 +583,6 @@
         document.getElementById('stat-top-category-sub').innerText = 'Erlebnisse auf ✅ Erlebt stellen';
       }
 
-      // Karte aktualisieren
       updateMapMarkers(visitedCountryIds);
     }
 
@@ -563,7 +689,7 @@
       document.getElementById('entry-sheet').classList.add('hidden');
     }
 
-    // SPEICHERN MIT BEHEBUNGEN FÜR NULL-VALUES (BEHEBT RATING CHECK CONSTRAINT FEHLER)
+    // SPEICHERN
     async function saveEntry(event) {
       event.preventDefault();
 
@@ -576,7 +702,7 @@
         category_id: parseInt(document.getElementById('form-category-select').value),
         title: document.getElementById('form-title').value,
         status: document.getElementById('form-status').value,
-        rating: ratingValue > 0 ? ratingValue : null, // sendet NULL statt 0
+        rating: ratingValue > 0 ? ratingValue : null,
         location: document.getElementById('form-location').value || null,
         notes: document.getElementById('form-notes').value || null
       };
@@ -685,17 +811,6 @@
       }
     }
 
-    function convertCurrency(source) {
-      const rate = exchangeRates[currentCountry?.currency_code] || 1;
-      if (source === 'local') {
-        const val = parseFloat(document.getElementById('calc-input-local').value) || 0;
-        document.getElementById('calc-input-eur').value = (val / rate).toFixed(2);
-      } else {
-        const val = parseFloat(document.getElementById('calc-input-eur').value) || 0;
-        document.getElementById('calc-input-local').value = (val * rate).toFixed(2);
-      }
-    }
-
     async function loadVocabulary() {
       const container = document.getElementById('vocab-list');
       if (!currentCountry) return;
@@ -742,7 +857,7 @@
         btn.className = (t === tabName) ? 'flex flex-col items-center gap-1 text-emerald-400' : 'flex flex-col items-center gap-1 text-slate-400';
       });
 
-      if (tabName === 'rechner') convertCurrency('local');
+      if (tabName === 'rechner') updateCalcCurrencyInfo();
       if (tabName === 'zentrum') initMap();
     }
   </script>
