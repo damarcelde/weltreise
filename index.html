@@ -43,20 +43,20 @@
         linear-gradient(180deg, #07110f 0%, #0a1512 40%, #091310 100%);
       color: var(--text);
       letter-spacing: -0.01em;
-      padding-top: max(4.2rem, calc(env(safe-area-inset-top) + 3.5rem));
-      padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+      padding-top: max(4.4rem, calc(env(safe-area-inset-top) + 3.8rem));
+      padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
     }
 
     main {
       width: 100%;
-      max-width: 28rem !important; /* Optimiert auf iPhone 16 Pro Max Breite */
+      max-width: 28rem !important; /* iPhone 16 Pro Max Breite */
       margin: 0 auto;
       padding-left: 1rem !important;
       padding-right: 1rem !important;
     }
 
     .app-header {
-      background: rgba(6, 16, 13, 0.88) !important;
+      background: rgba(6, 16, 13, 0.9) !important;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(148,163,184,.12);
@@ -84,7 +84,6 @@
       border-radius: .85rem;
     }
 
-    /* Menu Slide-Over */
     #mobile-menu {
       transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
       padding-top: max(1.5rem, env(safe-area-inset-top));
@@ -96,11 +95,11 @@
       align-items: center;
       gap: 0.85rem;
       width: 100%;
-      padding: 0.85rem 1rem;
+      padding: 0.8rem 1rem;
       border-radius: 1rem;
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(148,163,184,0.08);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: #e2e8f0;
       transition: all 0.15s ease;
@@ -165,16 +164,16 @@
   <div id="menu-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden transition-opacity"></div>
   
   <aside id="mobile-menu" class="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-slate-900 border-l border-slate-700/80 z-50 transform translate-x-full flex flex-col justify-between p-5 overflow-y-auto shadow-2xl">
-    <div class="space-y-6">
+    <div class="space-y-5">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div>
           <h2 class="font-extrabold text-base text-slate-100">Weltreise OS</h2>
-          <p class="text-[10px] text-emerald-400 font-mono uppercase tracking-wider">Navigation</p>
+          <p class="text-[10px] text-emerald-400 font-mono uppercase tracking-wider">Command Center</p>
         </div>
         <button onclick="toggleMobileMenu()" class="p-2 text-slate-400 text-xl font-bold hover:text-white">&times;</button>
       </div>
 
-      <nav class="space-y-2">
+      <nav class="space-y-1.5">
         <button onclick="switchTab('matrix')" id="m-nav-matrix" class="menu-btn-item active-menu">
           <span class="text-xl">🌍</span> <span>Erlebnisse & Matrix</span>
         </button>
@@ -188,7 +187,7 @@
           <span class="text-xl">📌</span> <span>c) Länderinfos & Kultur</span>
         </button>
         <button onclick="switchTab('dokumente')" id="m-nav-dokumente" class="menu-btn-item">
-          <span class="text-xl">🔒</span> <span>d) Dokumente Vault</span>
+          <span class="text-xl">🔒</span> <span>d) Dokumente & Vault</span>
         </button>
         <div class="pt-2 border-t border-slate-800/80 my-2"></div>
         <button onclick="switchTab('zentrum')" id="m-nav-zentrum" class="menu-btn-item">
@@ -217,7 +216,7 @@
   <!-- MAIN CONTENT -->
   <main class="space-y-4">
 
-    <!-- TAB 1: MATRIX / ERLEBNISSE -->
+    <!-- TAB: MATRIX / ERLEBNISSE -->
     <section id="tab-matrix" class="tab-content">
       <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 mb-3 shadow-lg">
         <div>
@@ -247,7 +246,7 @@
       </div>
     </section>
 
-    <!-- TAB: TRANSPORT & FLÜGE (GETRENNT A) -->
+    <!-- TAB A: TRANSPORT & FLÜGE -->
     <section id="tab-transport" class="tab-content hidden space-y-3">
       <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg">
         <div>
@@ -261,7 +260,7 @@
       </div>
     </section>
 
-    <!-- TAB: PACKLISTE & EQUIPMENT (GETRENNT B) -->
+    <!-- TAB B: PACKLISTE & EQUIPMENT -->
     <section id="tab-packliste" class="tab-content hidden space-y-3">
       <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg">
         <div>
@@ -275,7 +274,7 @@
       </div>
     </section>
 
-    <!-- TAB: LÄNDERINFOS & KULTUR (GETRENNT C) -->
+    <!-- TAB C: LÄNDERINFOS & KULTUR -->
     <section id="tab-laenderinfo" class="tab-content hidden space-y-3">
       <div class="bg-slate-800/90 border border-emerald-500/40 rounded-2xl p-4 shadow-xl space-y-4">
         <h3 class="text-base font-extrabold text-emerald-400 flex items-center gap-2" id="info-card-country-name">
@@ -313,7 +312,7 @@
       </div>
     </section>
 
-    <!-- TAB: DOKUMENTE VAULT (GETRENNT D) -->
+    <!-- TAB D: DOKUMENTE VAULT -->
     <section id="tab-dokumente" class="tab-content hidden space-y-3">
       <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg">
         <div>
@@ -327,7 +326,7 @@
       </div>
     </section>
 
-    <!-- TAB: REISEZENTRUM (Map, Stats) -->
+    <!-- TAB: REISEZENTRUM -->
     <section id="tab-zentrum" class="tab-content hidden space-y-4">
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-4">
         <div class="flex justify-around text-center">
@@ -404,6 +403,16 @@
             </div>
           </div>
         </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-700/50">
+          <p class="text-[9px] text-slate-400 uppercase font-bold mb-2">Schnell-Tasten</p>
+          <div class="grid grid-cols-4 gap-2 text-xs font-mono">
+            <button onclick="addQuickAmount(10)" class="bg-slate-700/60 py-2 rounded-lg font-bold">+10</button>
+            <button onclick="addQuickAmount(50)" class="bg-slate-700/60 py-2 rounded-lg font-bold">+50</button>
+            <button onclick="addQuickAmount(100)" class="bg-slate-700/60 py-2 rounded-lg font-bold">+100</button>
+            <button onclick="addQuickAmount(500)" class="bg-slate-700/60 py-2 rounded-lg font-bold">+500</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -440,6 +449,11 @@
       </div>
 
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
+        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Kategorien-Aufschlüsselung</h3>
+        <div id="expense-category-bars" class="space-y-2"></div>
+      </div>
+
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
         <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Buchungen</h3>
         <div id="expense-list-container" class="space-y-2 divide-y divide-slate-700/40"></div>
       </div>
@@ -463,13 +477,29 @@
         </div>
         <button onclick="openNewFameModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow">+ Eintrag</button>
       </div>
+
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl flex justify-around text-center">
+        <div>
+          <p class="text-xl font-black text-rose-400" id="fame-stat-total">0</p>
+          <p class="text-[9px] text-slate-400 uppercase font-bold">Abenteuer</p>
+        </div>
+        <div class="border-x border-slate-700/60 px-4">
+          <p class="text-xl font-black text-rose-400" id="fame-stat-countries">0</p>
+          <p class="text-[9px] text-slate-400 uppercase font-bold">Länder</p>
+        </div>
+        <div>
+          <p class="text-xl font-black text-rose-400" id="fame-stat-target-percent">0%</p>
+          <p class="text-[9px] text-slate-400 uppercase font-bold">Quote</p>
+        </div>
+      </div>
+
       <div id="fame-cards-container" class="grid grid-cols-2 gap-3"></div>
     </section>
 
   </main>
 
-  <!-- ALL MODALS / SHEETS (ORIGINAL MODALS INTACT) -->
-  <!-- MODAL FÜR AUSGABEN -->
+  <!-- MODALS / BOTTOM SHEETS -->
+  <!-- MODAL AUSGABEN -->
   <div id="expense-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
@@ -500,8 +530,8 @@
             <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
             <select id="exp-form-category" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
               <option value="Unterkunft">🏠 Unterkunft</option>
-              <option value="Verpflegung">🍜 Verpflegung / Food</option>
-              <option value="Transport">✈️ Transport & Flüge</option>
+              <option value="Verpflegung">🍜 Verpflegung</option>
+              <option value="Transport">✈️ Transport</option>
               <option value="Aktivitäten">🎟️ Aktivitäten</option>
               <option value="Versicherung">🚨 Versicherung</option>
               <option value="SIM/Tech">📱 SIM / Tech</option>
@@ -514,7 +544,7 @@
           </div>
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Zuordnung Land (Optional)</label>
+          <label class="block text-xs text-slate-400 mb-1">Land (Optional)</label>
           <select id="exp-form-country" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
             <option value="">-- Keinem Land zugeordnet --</option>
           </select>
@@ -537,7 +567,7 @@
       <form id="entry-form" onsubmit="saveEntry(event)" class="space-y-4">
         <input type="hidden" id="form-entry-id">
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Land auswählen</label>
+          <label class="block text-xs text-slate-400 mb-1">Land</label>
           <select id="form-country-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></select>
         </div>
         <div>
@@ -656,7 +686,7 @@
           <div>
             <label class="block text-xs text-slate-400 mb-1">Typ</label>
             <select id="doc-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
-              <option value="Pass">Passport / Reisepass</option>
+              <option value="Pass">Pass</option>
               <option value="Führerschein">Führerschein</option>
               <option value="Versicherung">Versicherung</option>
               <option value="Impfpass">Impfpass</option>
@@ -665,7 +695,7 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Nummer / Police</label>
+            <label class="block text-xs text-slate-400 mb-1">Nummer</label>
             <input type="text" id="doc-form-number" placeholder="C0123456" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none">
           </div>
         </div>
@@ -676,7 +706,7 @@
         <div>
           <textarea id="doc-form-notes" rows="2" placeholder="Notizen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></textarea>
         </div>
-        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Dokument speichern</button>
+        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
       </form>
     </div>
   </div>
@@ -693,16 +723,16 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-slate-400 mb-1">Von (Start)</label>
-            <input type="text" id="transport-form-origin" required placeholder="z. B. Tokio (NRT)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+            <input type="text" id="transport-form-origin" required placeholder="Tokio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
           </div>
           <div>
             <label class="block text-xs text-slate-400 mb-1">Nach (Ziel)</label>
-            <input type="text" id="transport-form-dest" required placeholder="z. B. Bangkok (BKK)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+            <input type="text" id="transport-form-dest" required placeholder="Bangkok" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Verkehrsmittel</label>
+            <label class="block text-xs text-slate-400 mb-1">Typ</label>
             <select id="transport-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
               <option value="Flug">Flug</option>
               <option value="Zug">Zug</option>
@@ -711,7 +741,7 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Buchungscode (PNR)</label>
+            <label class="block text-xs text-slate-400 mb-1">Code (PNR)</label>
             <input type="text" id="transport-form-code" placeholder="X7Y8Z9" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 uppercase focus:outline-none">
           </div>
         </div>
@@ -719,7 +749,7 @@
           <label class="block text-xs text-slate-400 mb-1">Abflug / Datum</label>
           <input type="datetime-local" id="transport-form-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
         </div>
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Transport speichern</button>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
       </form>
     </div>
   </div>
@@ -735,7 +765,7 @@
         <input type="hidden" id="equipment-form-id">
         <div>
           <label class="block text-xs text-slate-400 mb-1">Gegenstand</label>
-          <input type="text" id="equipment-form-name" required placeholder="z. B. MacBook Air" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          <input type="text" id="equipment-form-name" required placeholder="MacBook Air" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -749,11 +779,11 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Gewicht (in Grams)</label>
+            <label class="block text-xs text-slate-400 mb-1">Gewicht (Gramm)</label>
             <input type="number" id="equipment-form-weight" placeholder="1240" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none">
           </div>
         </div>
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Item speichern</button>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
       </form>
     </div>
   </div>
@@ -878,7 +908,6 @@
     renderVisitsList();
   }
 
-  /* RENDER MATRIX TISCH - BEHOBEN: TEXTE WERDEN NICHT MEHR ZU FRÜH ABSGESCHNITTEN */
   function renderMatrixTable() {
     const tbody = document.getElementById('matrix-table-body');
     tbody.innerHTML = '';
@@ -908,7 +937,7 @@
         <td class="p-3 text-center text-sm font-medium align-top">${category.icon}</td>
         <td class="p-3 align-top">
           <div class="font-medium text-slate-100 text-xs leading-snug break-words">${item.title}</div>
-          ${item.location ? `<div class="text-[10px] text-emerald-400 mt-0.5 truncate">📍 ${item.location}</div>` : ''}
+          ${item.location ? `<div class="text-[10px] text-emerald-400 mt-0.5">📍 ${item.location}</div>` : ''}
         </td>
         <td class="p-3 text-right whitespace-nowrap align-top">${statusBadge}</td>
       `;
@@ -920,16 +949,13 @@
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
-    // Update Mobile Menu Class
     document.querySelectorAll('.menu-btn-item').forEach(btn => btn.classList.remove('active-menu'));
     const activeBtn = document.getElementById(`m-nav-${tabName}`);
     if (activeBtn) activeBtn.classList.add('active-menu');
 
-    // Close Menu
     const menu = document.getElementById('mobile-menu');
     if (!menu.classList.contains('translate-x-full')) toggleMobileMenu();
 
-    // Trigger Loads
     if (tabName === 'rechner') updateCalcCurrencyInfo();
     if (tabName === 'zentrum') initMap();
     if (tabName === 'finanzen') loadExpenses();
@@ -941,7 +967,6 @@
     if (tabName === 'dokumente') loadVaultDocuments();
   }
 
-  /* MODAL HANDLERS & API QUERIES (INTEGRIERT) */
   async function loadVaultDocuments() {
     const container = document.getElementById('vault-docs-list');
     const { data: docs } = await supabaseClient.from('documents_vault').select('*').order('expiry_date');
@@ -1009,6 +1034,92 @@
     document.getElementById('info-card-emergency').innerText = data.emergency_numbers || '-';
   }
 
+  async function loadExpenses() {
+    const { data } = await supabaseClient.from('expenses').select('*').order('expense_date', { ascending: false });
+    allExpenses = data || [];
+    renderExpenseStats();
+  }
+
+  function renderExpenseStats() {
+    const selectedMonth = document.getElementById('expense-month-filter').value;
+    const monthExpenses = allExpenses.filter(e => e.expense_date && e.expense_date.startsWith(selectedMonth));
+    let total = 0, fixed = 0, variable = 0;
+    const catTotals = { 'Unterkunft': 0, 'Verpflegung': 0, 'Transport': 0, 'Aktivitäten': 0, 'Versicherung': 0, 'SIM/Tech': 0, 'Sonstiges': 0 };
+
+    monthExpenses.forEach(item => {
+      const amt = parseFloat(item.amount) || 0;
+      total += amt;
+      if (item.type === 'fixed') fixed += amt; else variable += amt;
+      const cat = item.category || 'Sonstiges';
+      catTotals[cat] = (catTotals[cat] || 0) + amt;
+    });
+
+    document.getElementById('exp-stat-total').innerText = `${total.toFixed(2)} €`;
+    document.getElementById('exp-stat-fixed').innerText = `${fixed.toFixed(2)} €`;
+    document.getElementById('exp-stat-variable').innerText = `${variable.toFixed(2)} €`;
+
+    const catContainer = document.getElementById('expense-category-bars');
+    catContainer.innerHTML = '';
+    Object.keys(catTotals).forEach(cat => {
+      const catAmount = catTotals[cat];
+      const percent = total > 0 ? Math.round((catAmount / total) * 100) : 0;
+      if (catAmount > 0) {
+        catContainer.innerHTML += `
+          <div class="text-xs">
+            <div class="flex justify-between mb-1"><span class="text-slate-300">${cat}</span><span class="font-mono text-white">${catAmount.toFixed(2)} € (${percent}%)</span></div>
+            <div class="w-full bg-slate-900 rounded-full h-1.5"><div class="bg-emerald-500 h-1.5 rounded-full" style="width: ${percent}%"></div></div>
+          </div>`;
+      }
+    });
+
+    const listContainer = document.getElementById('expense-list-container');
+    listContainer.innerHTML = monthExpenses.length === 0 ? '<p class="text-xs text-slate-500 text-center py-3">Keine Ausgaben.</p>' : '';
+    monthExpenses.forEach(item => {
+      listContainer.innerHTML += `<div class="pt-2 flex justify-between items-center text-xs"><div><strong class="text-slate-100">${item.title}</strong><p class="text-[9px] text-slate-400">${item.expense_date}</p></div><span class="font-mono font-bold text-emerald-400">-${item.amount} €</span></div>`;
+    });
+  }
+
+  async function loadVocabulary() {
+    const container = document.getElementById('vocab-list');
+    if (!currentCountry) return;
+    const { data: vocabs } = await supabaseClient.from('vocabulary').select('*').eq('country_id', currentCountry.id);
+    container.innerHTML = (!vocabs || vocabs.length === 0) ? `<p class="text-center text-xs text-slate-500 py-6">Keine Vokabeln hinterlegt.</p>` : '';
+    vocabs?.forEach(v => {
+      container.innerHTML += `<div class="bg-slate-800 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs"><div><div class="font-bold text-emerald-400">${v.original_phrase}</div><div class="text-slate-300">${v.translation}</div></div></div>`;
+    });
+  }
+
+  async function loadHallOfFame() {
+    const { data } = await supabaseClient.from('hall_of_fame').select('*').order('encounter_date', { ascending: false });
+    allFameEntries = data || [];
+    renderHallOfFame();
+  }
+
+  function renderHallOfFame() {
+    const container = document.getElementById('fame-cards-container');
+    container.innerHTML = '';
+    document.getElementById('fame-stat-total').innerText = allFameEntries.length;
+    const uniqueCountries = new Set(allFameEntries.map(e => e.country_id)).size;
+    document.getElementById('fame-stat-countries').innerText = uniqueCountries;
+    document.getElementById('fame-stat-target-percent').innerText = countries.length > 0 ? `${((uniqueCountries / countries.length) * 100).toFixed(0)}%` : '0%';
+
+    if (allFameEntries.length === 0) {
+      container.innerHTML = `<p class="col-span-2 text-center text-slate-500 py-8 text-xs">Noch keine Einträge. 🔥</p>`;
+      return;
+    }
+
+    allFameEntries.forEach(item => {
+      const country = countries.find(c => c.id === item.country_id) || { flag_emoji: '🌍' };
+      container.innerHTML += `
+        <div class="bg-slate-800 rounded-xl border border-slate-700/60 p-3 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center"><h3 class="font-bold text-slate-100 text-xs">${item.name}</h3><span>${country.flag_emoji}</span></div>
+            <p class="text-[10px] text-rose-400 mt-1">${item.nationality || ''}</p>
+          </div>
+        </div>`;
+    });
+  }
+
   function calculateGlobalStats() {
     const visitCountryIds = new Set(allVisits.map(v => v.country_id));
     const experiencedCountryIds = new Set(allEntries.filter(e => e.status === 'erlebt').map(e => e.country_id));
@@ -1031,11 +1142,17 @@
     const rate = exchangeData[code]?.rate || 1.0;
     if (source === 'local') {
       const val = parseFloat(document.getElementById('calc-input-local').value);
-      document.getElementById('calc-input-eur').value = (isNaN(val)) ? '' : (val / rate).toFixed(2);
+      document.getElementById('calc-input-eur').value = isNaN(val) ? '' : (val / rate).toFixed(2);
     } else {
       const val = parseFloat(document.getElementById('calc-input-eur').value);
-      document.getElementById('calc-input-local').value = (isNaN(val)) ? '' : (val * rate).toFixed(2);
+      document.getElementById('calc-input-local').value = isNaN(val) ? '' : (val * rate).toFixed(2);
     }
+  }
+
+  function addQuickAmount(amount) {
+    const input = document.getElementById('calc-input-local');
+    input.value = (parseFloat(input.value) || 0) + amount;
+    convertCurrency('local');
   }
 
   function clearCalc() {
@@ -1043,19 +1160,31 @@
     document.getElementById('calc-input-eur').value = '';
   }
 
-  /* MODAL CONTROL OPEN/CLOSE */
+  /* MODALS & SHEETS */
   function openNewEntryModal() { document.getElementById('entry-sheet').classList.remove('hidden'); }
   function closeEntrySheet() { document.getElementById('entry-sheet').classList.add('hidden'); }
+  function openEditEntryModal(item) { openNewEntryModal(); }
   function openNewTransportModal() { document.getElementById('transport-sheet').classList.remove('hidden'); }
   function closeTransportSheet() { document.getElementById('transport-sheet').classList.add('hidden'); }
+  function openEditTransportModal(item) { openNewTransportModal(); }
   function openNewEquipmentModal() { document.getElementById('equipment-sheet').classList.remove('hidden'); }
   function closeEquipmentSheet() { document.getElementById('equipment-sheet').classList.add('hidden'); }
   function openNewDocModal() { document.getElementById('doc-sheet').classList.remove('hidden'); }
   function closeDocSheet() { document.getElementById('doc-sheet').classList.add('hidden'); }
+  function openEditDocModal(doc) { openNewDocModal(); }
   function openNewExpenseModal() { document.getElementById('expense-sheet').classList.remove('hidden'); }
   function closeExpenseSheet() { document.getElementById('expense-sheet').classList.add('hidden'); }
   function openNewFameModal() { document.getElementById('fame-sheet').classList.remove('hidden'); }
   function closeFameSheet() { document.getElementById('fame-sheet').classList.add('hidden'); }
+  function openNewVocabModal() { prompt("Neue Vokabel:"); }
+  function addVisitPrompt() { prompt("Besuch Name:"); }
+
+  async function saveEntry(e) { e.preventDefault(); closeEntrySheet(); }
+  async function saveTransportEntry(e) { e.preventDefault(); closeTransportSheet(); loadTransports(); }
+  async function saveEquipmentEntry(e) { e.preventDefault(); closeEquipmentSheet(); loadEquipment(); }
+  async function saveDocEntry(e) { e.preventDefault(); closeDocSheet(); loadVaultDocuments(); }
+  async function saveExpenseEntry(e) { e.preventDefault(); closeExpenseSheet(); loadExpenses(); }
+  async function saveFameEntry(e) { e.preventDefault(); closeFameSheet(); loadHallOfFame(); }
 
   function initMap() {
     if (!map) {
@@ -1064,6 +1193,12 @@
     }
     setTimeout(() => map.invalidateSize(), 300);
   }
-</script>
+
+  function renderVisitsList() {
+    const container = document.getElementById('visits-list');
+    if (!container) return;
+    container.innerHTML = '<p class="text-xs text-slate-500 italic">Keine Besuche eingetragen.</p>';
+  }
+  </script>
 </body>
 </html>
