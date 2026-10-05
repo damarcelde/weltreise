@@ -251,115 +251,115 @@
       </div>
     </section>
 
-    <!-- TAB 6: SAFE & LIFEHACKS (VOLLSTÄNDIG ERWEITERT) -->
-    <section id="tab-safe" class="tab-content hidden space-y-4">
-      <h2 class="text-lg font-bold flex items-center gap-2">🛡️ Safe & Notfall-Zentrale</h2>
+    <!-- TAB 6: SAFE & LIFEHACKS (AUFGERÄUMT MIT COLLAPSE) -->
+    <section id="tab-safe" class="tab-content hidden space-y-3">
+      <h2 class="text-lg font-bold mb-2 flex items-center gap-2">🛡️ Safe & Notfall-Zentrale</h2>
 
-      <!-- 1. DOKUMENTEN- & NOTFALL-VAULT -->
-      <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-xl space-y-3">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+      <!-- 1. DOKUMENTEN-VAULT (COLLAPSIBLE) -->
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+        <button onclick="toggleSection('collapse-docs', 'arrow-docs')" class="w-full p-4 bg-slate-800/80 hover:bg-slate-750 flex justify-between items-center text-left transition">
           <div>
-            <h3 class="text-sm font-bold text-rose-400 flex items-center gap-1.5">
-              🔒 Dokumenten- & Notfall-Vault
-            </h3>
-            <p class="text-[10px] text-slate-400">Pässe, Policen & Führerscheine sicher im Blick</p>
+            <h3 class="text-sm font-bold text-rose-400 flex items-center gap-2">🔒 Dokumenten- & Notfall-Vault</h3>
+            <p class="text-[10px] text-slate-400">Pässe, Policen & Führerscheine</p>
           </div>
-          <button onclick="openNewDocPrompt()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-2.5 py-1 rounded-lg font-medium transition shadow">
-            + Dok
-          </button>
-        </div>
-        <div id="vault-docs-list" class="space-y-2">
-          <p class="text-xs text-slate-500 italic text-center py-4">Lade Safe-Dokumente...</p>
+          <div class="flex items-center gap-3">
+            <button onclick="event.stopPropagation(); openNewDocModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-[11px] px-2.5 py-1 rounded-lg font-medium transition shadow">+ Dok</button>
+            <span id="arrow-docs" class="text-slate-400 text-xs transition-transform duration-300 transform rotate-180">▼</span>
+          </div>
+        </button>
+        <div id="collapse-docs" class="p-4 border-t border-slate-700/60 space-y-2 bg-slate-900/40">
+          <div id="vault-docs-list" class="space-y-2">
+            <p class="text-xs text-slate-500 italic text-center py-2">Lade Safe-Dokumente...</p>
+          </div>
         </div>
       </div>
 
-      <!-- 2. FLUG- & TRANSPORT-HUB -->
-      <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-xl space-y-3">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+      <!-- 2. FLUG- & TRANSPORT-HUB (COLLAPSIBLE) -->
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+        <button onclick="toggleSection('collapse-transport', 'arrow-transport')" class="w-full p-4 bg-slate-800/80 hover:bg-slate-750 flex justify-between items-center text-left transition">
           <div>
-            <h3 class="text-sm font-bold text-blue-400 flex items-center gap-1.5">
-              ✈️ Transport & Flug-Hub
-            </h3>
-            <p class="text-[10px] text-slate-400">Kommende Flüge, Züge & Buchungscodes</p>
+            <h3 class="text-sm font-bold text-blue-400 flex items-center gap-2">✈️ Transport & Flug-Hub</h3>
+            <p class="text-[10px] text-slate-400">Flüge, Züge & Buchungscodes</p>
           </div>
-          <button onclick="openNewTransportPrompt()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-2.5 py-1 rounded-lg font-medium transition shadow">
-            + Fahrt
-          </button>
-        </div>
-        <div id="transport-list" class="space-y-2">
-          <p class="text-xs text-slate-500 italic text-center py-4">Keine Buchungen eingetragen.</p>
+          <div class="flex items-center gap-3">
+            <button onclick="event.stopPropagation(); openNewTransportModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] px-2.5 py-1 rounded-lg font-medium transition shadow">+ Fahrt</button>
+            <span id="arrow-transport" class="text-slate-400 text-xs transition-transform duration-300">▼</span>
+          </div>
+        </button>
+        <div id="collapse-transport" class="hidden p-4 border-t border-slate-700/60 space-y-2 bg-slate-900/40">
+          <div id="transport-list" class="space-y-2">
+            <p class="text-xs text-slate-500 italic text-center py-2">Keine Buchungen eingetragen.</p>
+          </div>
         </div>
       </div>
 
-      <!-- 3. PACKLISTE & EQUIPMENT -->
-      <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-xl space-y-3">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+      <!-- 3. PACKLISTE & EQUIPMENT (COLLAPSIBLE) -->
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+        <button onclick="toggleSection('collapse-pack', 'arrow-pack')" class="w-full p-4 bg-slate-800/80 hover:bg-slate-750 flex justify-between items-center text-left transition">
           <div>
-            <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
-              🎒 Packliste & Gewichtstracker
-            </h3>
+            <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-2">🎒 Packliste & Ausrüstung</h3>
             <p class="text-[10px] text-slate-400" id="pack-weight-stat">Gesamtgewicht: 0 kg</p>
           </div>
-          <button onclick="openNewEquipmentPrompt()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded-lg font-medium transition shadow">
-            + Item
-          </button>
-        </div>
-        <div id="equipment-list" class="space-y-2">
-          <p class="text-xs text-slate-500 italic text-center py-4">Lade Ausrüstung...</p>
-        </div>
-      </div>
-
-      <!-- 4. LÄNDER-INFO CARD (DYNAMISCH) -->
-      <div class="bg-slate-800 border border-emerald-500/40 rounded-2xl p-4 shadow-xl space-y-3">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-          <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-1.5" id="info-card-country-name">
-            📌 Lade Länderdaten...
-          </h3>
-          <span class="text-xs font-mono font-bold text-slate-300" id="info-card-capital-pop"></span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
-            <p class="text-[10px] uppercase text-slate-400 font-semibold">🛂 Visum & Aufenthalt</p>
-            <p class="font-bold text-slate-200 mt-0.5" id="info-card-visa-req">-</p>
-            <p class="text-[10px] text-emerald-400 font-mono mt-0.5" id="info-card-max-stay">-</p>
+          <div class="flex items-center gap-3">
+            <button onclick="event.stopPropagation(); openNewEquipmentModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] px-2.5 py-1 rounded-lg font-medium transition shadow">+ Item</button>
+            <span id="arrow-pack" class="text-slate-400 text-xs transition-transform duration-300">▼</span>
           </div>
-
-          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
-            <p class="text-[10px] uppercase text-slate-400 font-semibold">🔌 Stecker & Netz</p>
-            <p class="font-bold text-slate-200 mt-0.5" id="info-card-power-plug">-</p>
+        </button>
+        <div id="collapse-pack" class="hidden p-4 border-t border-slate-700/60 space-y-2 bg-slate-900/40">
+          <div id="equipment-list" class="space-y-2">
+            <p class="text-xs text-slate-500 italic text-center py-2">Lade Ausrüstung...</p>
           </div>
         </div>
+      </div>
 
-        <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 text-xs">
-          <p class="text-[10px] uppercase text-amber-400 font-semibold">📱 SIM-Karten & Internet-Tipps</p>
-          <p class="text-slate-300 mt-0.5 leading-relaxed" id="info-card-sim-tips">-</p>
-        </div>
-
-        <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 text-xs space-y-1">
-          <p class="text-[10px] uppercase text-rose-400 font-semibold">🏛️ Deutsche Botschaft & Notrufe</p>
-          <p class="text-slate-200 font-medium" id="info-card-embassy-address">-</p>
-          <p class="text-slate-400 font-mono" id="info-card-embassy-phone">-</p>
-          <p class="text-amber-400 font-mono font-bold pt-1 border-t border-slate-800" id="info-card-emergency">-</p>
+      <!-- 4. DYNAMISCHE LÄNDER-INFO (COLLAPSIBLE) -->
+      <div class="bg-slate-800 border border-emerald-500/40 rounded-2xl overflow-hidden shadow-xl">
+        <button onclick="toggleSection('collapse-info', 'arrow-info')" class="w-full p-4 bg-slate-800/80 hover:bg-slate-750 flex justify-between items-center text-left transition">
+          <div>
+            <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-1.5" id="info-card-country-name">
+              📌 Lade Länderdaten...
+            </h3>
+            <p class="text-[10px] text-slate-400">Visum, Steckdosen & Botschaft</p>
+          </div>
+          <span id="arrow-info" class="text-slate-400 text-xs transition-transform duration-300">▼</span>
+        </button>
+        <div id="collapse-info" class="hidden p-4 border-t border-slate-700/60 space-y-3 bg-slate-900/40">
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
+              <p class="text-[10px] uppercase text-slate-400 font-semibold">🛂 Visum & Aufenthalt</p>
+              <p class="font-bold text-slate-200 mt-0.5" id="info-card-visa-req">-</p>
+              <p class="text-[10px] text-emerald-400 font-mono mt-0.5" id="info-card-max-stay">-</p>
+            </div>
+            <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
+              <p class="text-[10px] uppercase text-slate-400 font-semibold">🔌 Stecker & Netz</p>
+              <p class="font-bold text-slate-200 mt-0.5" id="info-card-power-plug">-</p>
+            </div>
+          </div>
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 text-xs">
+            <p class="text-[10px] uppercase text-amber-400 font-semibold">📱 SIM-Karten & Internet</p>
+            <p class="text-slate-300 mt-0.5 leading-relaxed" id="info-card-sim-tips">-</p>
+          </div>
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 text-xs space-y-1">
+            <p class="text-[10px] uppercase text-rose-400 font-semibold">🏛️ Deutsche Botschaft & Notrufe</p>
+            <p class="text-slate-200 font-medium" id="info-card-embassy-address">-</p>
+            <p class="text-slate-400 font-mono" id="info-card-embassy-phone">-</p>
+            <p class="text-amber-400 font-mono font-bold pt-1 border-t border-slate-800" id="info-card-emergency">-</p>
+          </div>
         </div>
       </div>
 
-      <!-- 5. HEALTH & SCOOTER CHECKS -->
-      <div class="grid grid-cols-2 gap-3">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-3">
-          <h4 class="text-xs font-bold text-rose-400 mb-1">🏥 Gastro & Wasser</h4>
-          <p class="text-[10px] text-slate-300">Wasserqualität & Magen-Schutz beachten!</p>
+      <!-- 5. KULTURELLE TABUS & GUIDELINES (COLLAPSIBLE) -->
+      <div class="bg-slate-800 border border-purple-500/30 rounded-2xl overflow-hidden shadow-xl">
+        <button onclick="toggleSection('collapse-taboos', 'arrow-taboos')" class="w-full p-4 bg-slate-800/80 hover:bg-slate-750 flex justify-between items-center text-left transition">
+          <div>
+            <h3 class="text-sm font-semibold text-purple-400">💡 Kulturelle Tabus & Verhaltensregeln</h3>
+            <p class="text-[10px] text-slate-400">Verhaltensmuster für das gewählte Land</p>
+          </div>
+          <span id="arrow-taboos" class="text-slate-400 text-xs transition-transform duration-300">▼</span>
+        </button>
+        <div id="collapse-taboos" class="hidden p-4 border-t border-slate-700/60 bg-slate-900/40">
+          <p id="safe-taboos" class="text-xs text-slate-300 leading-relaxed">Lade Verhaltensregeln...</p>
         </div>
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-3">
-          <h4 class="text-xs font-bold text-amber-400 mb-1">🛵 Scooter-Miete</h4>
-          <p class="text-[10px] text-slate-300">Helm & Int. Führerschein Klasse A zwingend.</p>
-        </div>
-      </div>
-
-      <!-- 6. KULTURELLE TABUS -->
-      <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
-        <h3 class="text-sm font-semibold text-purple-400 mb-2">💡 Kulturelle Tabus (Aktuelles Land)</h3>
-        <p id="safe-taboos" class="text-xs text-slate-300 leading-relaxed">Lade Verhaltensregeln...</p>
       </div>
     </section>
 
@@ -588,6 +588,126 @@
     </div>
   </div>
 
+  <!-- NEU: DOKUMENTEN MODAL (SAFE) -->
+  <div id="doc-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="doc-sheet-title" class="text-lg font-bold text-slate-100">🔒 Dokument erfassen</h3>
+        <button onclick="closeDocSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      <form id="doc-form" onsubmit="saveDocEntry(event)" class="space-y-4">
+        <input type="hidden" id="doc-form-id">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Bezeichnung</label>
+          <input type="text" id="doc-form-title" required placeholder="z. B. Reisepass, Führerschein" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 text-white focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Typ</label>
+            <select id="doc-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Pass">🛂 Reisepass</option>
+              <option value="Führerschein">🪪 Führerschein</option>
+              <option value="Versicherung">🚨 Versicherung</option>
+              <option value="Impfpass">💉 Impfpass</option>
+              <option value="Kreditkarte">💳 Kreditkarte</option>
+              <option value="Sonstiges">📄 Sonstiges</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Nummer / Police</label>
+            <input type="text" id="doc-form-number" placeholder="z. B. C0123456" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Ablaufdatum</label>
+          <input type="date" id="doc-form-expiry" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Notizen & Hotlines</label>
+          <textarea id="doc-form-notes" rows="2" placeholder="Notrufnummern, Bedingungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 text-white focus:outline-none"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Dokument speichern</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- NEU: TRANSPORT MODAL (SAFE) -->
+  <div id="transport-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="transport-sheet-title" class="text-lg font-bold text-slate-100">✈️ Transport erfassen</h3>
+        <button onclick="closeTransportSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      <form id="transport-form" onsubmit="saveTransportEntry(event)" class="space-y-4">
+        <input type="hidden" id="transport-form-id">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Von (Start)</label>
+            <input type="text" id="transport-form-origin" required placeholder="z. B. Tokio (NRT)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 text-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Nach (Ziel)</label>
+            <input type="text" id="transport-form-dest" required placeholder="z. B. Bangkok (BKK)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 text-white focus:outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Verkehrsmittel</label>
+            <select id="transport-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Flug">✈️ Flug</option>
+              <option value="Zug">🚆 Zug</option>
+              <option value="Bus">🚌 Bus</option>
+              <option value="Fähre">⛴️ Fähre</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Buchungscode (PNR)</label>
+            <input type="text" id="transport-form-code" placeholder="z. B. X7Y8Z9" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 uppercase focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Datum / Abflugzeit</label>
+          <input type="datetime-local" id="transport-form-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Transport speichern</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- NEU: EQUIPMENT MODAL (SAFE) -->
+  <div id="equipment-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="equipment-sheet-title" class="text-lg font-bold text-slate-100">🎒 Ausrüstung erfassen</h3>
+        <button onclick="closeEquipmentSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      <form id="equipment-form" onsubmit="saveEquipmentEntry(event)" class="space-y-4">
+        <input type="hidden" id="equipment-form-id">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Gegenstand</label>
+          <input type="text" id="equipment-form-name" required placeholder="z. B. MacBook Air M2, Ladekabel" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 text-white focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
+            <select id="equipment-form-cat" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Elektronik">💻 Elektronik</option>
+              <option value="Kleidung">👕 Kleidung</option>
+              <option value="Dokumente">📄 Dokumente</option>
+              <option value="Apotheke">💊 Apotheke</option>
+              <option value="Kulturtasche">🧴 Kulturtasche</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Gewicht (in Gramm)</label>
+            <input type="number" id="equipment-form-weight" placeholder="z. B. 1240" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none">
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Item speichern</button>
+      </form>
+    </div>
+  </div>
+
   <!-- FIXED BOTTOM NAVIGATION BAR -->
   <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 max-w-md mx-auto flex justify-around items-center p-2 z-40">
     <button onclick="switchTab('matrix')" id="nav-matrix" class="flex flex-col items-center gap-1 text-emerald-400">
@@ -609,7 +729,7 @@
       <span class="text-lg">🔥</span><span class="text-[10px] font-medium">Fame</span>
     </button>
     <button onclick="switchTab('safe')" id="nav-safe" class="flex flex-col items-center gap-1 text-slate-400">
-      <span class="text-lg">🛡️</span><span class="text-[10px] font-medium">Safe</span>
+      <span class="text-lg">🛡️️</span><span class="text-[10px] font-medium">Safe</span>
     </button>
   </nav>
 
@@ -757,7 +877,21 @@
       renderVisitsList();
     }
 
-    // --- ERWEITERTE DOKUMENTEN- & VAULT-LOGIK ---
+    // --- TOGGLE COLLAPSE SECTIONS ---
+    function toggleSection(contentId, arrowId) {
+      const content = document.getElementById(contentId);
+      const arrow = document.getElementById(arrowId);
+      
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        arrow.classList.add('rotate-180');
+      } else {
+        content.classList.add('hidden');
+        arrow.classList.remove('rotate-180');
+      }
+    }
+
+    // --- DOKUMENTEN VAULT LOGIK ---
     async function loadVaultDocuments() {
       const container = document.getElementById('vault-docs-list');
       const { data: docs, error } = await supabaseClient.from('documents_vault').select('*').order('expiry_date', { ascending: true });
@@ -788,37 +922,61 @@
         const docIcons = { 'Pass': '🛂', 'Führerschein': '🪪', 'Versicherung': '🚨', 'Impfpass': '💉', 'Kreditkarte': '💳', 'Sonstiges': '📄' };
         const icon = docIcons[doc.doc_type] || '📄';
 
-        container.innerHTML += `
-          <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60 flex justify-between items-start text-xs">
-            <div class="space-y-0.5">
-              <div class="flex items-center gap-1.5">
-                <span>${icon}</span>
-                <strong class="text-slate-100 font-bold">${doc.title}</strong>
-                ${warningBadge}
-              </div>
-              ${doc.doc_number ? `<p class="text-[10px] font-mono text-emerald-400">Nr: ${doc.doc_number}</p>` : ''}
-              ${doc.notes ? `<p class="text-[9px] text-slate-400 leading-tight">${doc.notes}</p>` : ''}
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60 flex justify-between items-start text-xs cursor-pointer hover:bg-slate-800 transition';
+        itemDiv.onclick = () => openEditDocModal(doc);
+
+        itemDiv.innerHTML = `
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-1.5">
+              <span>${icon}</span>
+              <strong class="text-slate-100 font-bold">${doc.title}</strong>
+              ${warningBadge}
             </div>
-            <div class="text-right text-[9px] text-slate-400 font-mono">
-              ${doc.expiry_date ? `Ablauf: ${doc.expiry_date}` : ''}
-            </div>
+            ${doc.doc_number ? `<p class="text-[10px] font-mono text-emerald-400">Nr: ${doc.doc_number}</p>` : ''}
+            ${doc.notes ? `<p class="text-[9px] text-slate-400 leading-tight">${doc.notes}</p>` : ''}
+          </div>
+          <div class="text-right text-[9px] text-slate-400 font-mono">
+            ${doc.expiry_date ? `Ablauf: ${doc.expiry_date}` : ''}
           </div>
         `;
+        container.appendChild(itemDiv);
       });
     }
 
-    async function openNewDocPrompt() {
-      const title = prompt("Dokument Name (z. B. Reisepass):");
-      if (!title) return;
-      const doc_number = prompt("Dokumentnummer / Police-Nr:");
-      const expiry_date = prompt("Ablaufdatum (YYYY-MM-DD):");
-      
-      await supabaseClient.from('documents_vault').insert([{
-        title,
-        doc_type: 'Pass',
-        doc_number: doc_number || null,
-        expiry_date: expiry_date || null
-      }]);
+    function openNewDocModal() {
+      document.getElementById('doc-sheet-title').innerText = '🔒 Dokument erfassen';
+      document.getElementById('doc-form').reset();
+      document.getElementById('doc-form-id').value = '';
+      document.getElementById('doc-sheet').classList.remove('hidden');
+    }
+
+    function openEditDocModal(doc) {
+      openNewDocModal();
+      document.getElementById('doc-sheet-title').innerText = 'Dokument bearbeiten';
+      document.getElementById('doc-form-id').value = doc.id;
+      document.getElementById('doc-form-title').value = doc.title;
+      document.getElementById('doc-form-type').value = doc.doc_type;
+      document.getElementById('doc-form-number').value = doc.doc_number || '';
+      document.getElementById('doc-form-expiry').value = doc.expiry_date || '';
+      document.getElementById('doc-form-notes').value = doc.notes || '';
+    }
+
+    function closeDocSheet() { document.getElementById('doc-sheet').classList.add('hidden'); }
+
+    async function saveDocEntry(e) {
+      e.preventDefault();
+      const id = document.getElementById('doc-form-id').value;
+      const payload = {
+        title: document.getElementById('doc-form-title').value,
+        doc_type: document.getElementById('doc-form-type').value,
+        doc_number: document.getElementById('doc-form-number').value || null,
+        expiry_date: document.getElementById('doc-form-expiry').value || null,
+        notes: document.getElementById('doc-form-notes').value || null
+      };
+      if (id) await supabaseClient.from('documents_vault').update(payload).eq('id', id);
+      else await supabaseClient.from('documents_vault').insert([payload]);
+      closeDocSheet();
       await loadVaultDocuments();
     }
 
@@ -837,34 +995,60 @@
 
       list.forEach(item => {
         const icon = transportIcons[item.transport_type] || '✈️';
-        container.innerHTML += `
-          <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs">
-            <div>
-              <div class="font-bold text-slate-100 flex items-center gap-1.5">
-                <span>${icon}</span> ${item.origin} ➔ ${item.destination}
-              </div>
-              <p class="text-[10px] text-slate-400 font-mono mt-0.5">
-                ${item.departure_time ? `📅 ${item.departure_time.slice(0, 10)}` : ''} 
-                ${item.booking_code ? `• Code: <strong class="text-emerald-400">${item.booking_code}</strong>` : ''}
-              </p>
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs cursor-pointer hover:bg-slate-800 transition';
+        itemDiv.onclick = () => openEditTransportModal(item);
+
+        itemDiv.innerHTML = `
+          <div>
+            <div class="font-bold text-slate-100 flex items-center gap-1.5">
+              <span>${icon}</span> ${item.origin} ➔ ${item.destination}
             </div>
+            <p class="text-[10px] text-slate-400 font-mono mt-0.5">
+              ${item.departure_time ? `📅 ${item.departure_time.slice(0, 10)}` : ''} 
+              ${item.booking_code ? `• Code: <strong class="text-emerald-400">${item.booking_code}</strong>` : ''}
+            </p>
           </div>
         `;
+        container.appendChild(itemDiv);
       });
     }
 
-    async function openNewTransportPrompt() {
-      const origin = prompt("Startort / Flughafen:");
-      if (!origin) return;
-      const destination = prompt("Zielort / Flughafen:");
-      const booking_code = prompt("Buchungscode / PNR:");
+    function openNewTransportModal() {
+      document.getElementById('transport-sheet-title').innerText = '✈️️ Transport erfassen';
+      document.getElementById('transport-form').reset();
+      document.getElementById('transport-form-id').value = '';
+      document.getElementById('transport-sheet').classList.remove('hidden');
+    }
 
-      await supabaseClient.from('transports').insert([{
-        origin,
-        destination,
-        booking_code: booking_code || null,
-        transport_type: 'Flug'
-      }]);
+    function openEditTransportModal(item) {
+      openNewTransportModal();
+      document.getElementById('transport-sheet-title').innerText = 'Transport bearbeiten';
+      document.getElementById('transport-form-id').value = item.id;
+      document.getElementById('transport-form-origin').value = item.origin;
+      document.getElementById('transport-form-dest').value = item.destination;
+      document.getElementById('transport-form-type').value = item.transport_type;
+      document.getElementById('transport-form-code').value = item.booking_code || '';
+      if (item.departure_time) {
+        document.getElementById('transport-form-date').value = item.departure_time.slice(0, 16);
+      }
+    }
+
+    function closeTransportSheet() { document.getElementById('transport-sheet').classList.add('hidden'); }
+
+    async function saveTransportEntry(e) {
+      e.preventDefault();
+      const id = document.getElementById('transport-form-id').value;
+      const payload = {
+        origin: document.getElementById('transport-form-origin').value,
+        destination: document.getElementById('transport-form-dest').value,
+        transport_type: document.getElementById('transport-form-type').value,
+        booking_code: document.getElementById('transport-form-code').value || null,
+        departure_time: document.getElementById('transport-form-date').value || null
+      };
+      if (id) await supabaseClient.from('transports').update(payload).eq('id', id);
+      else await supabaseClient.from('transports').insert([payload]);
+      closeTransportSheet();
       await loadTransports();
     }
 
@@ -883,15 +1067,17 @@
 
       items.forEach(item => {
         if (item.weight_g) totalWeight += item.weight_g;
-        container.innerHTML += `
-          <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" ${item.is_packed ? 'checked' : ''} onchange="togglePacked(${item.id}, this.checked)" class="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0">
-              <span class="${item.is_packed ? 'line-through text-slate-500' : 'text-slate-200'}">${item.item_name}</span>
-            </div>
-            <span class="text-[10px] text-slate-400 font-mono">${item.weight_g ? `${item.weight_g}g` : ''}</span>
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs';
+
+        itemDiv.innerHTML = `
+          <div class="flex items-center gap-2">
+            <input type="checkbox" ${item.is_packed ? 'checked' : ''} onchange="togglePacked(${item.id}, this.checked)" class="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0">
+            <span onclick="openEditEquipmentModal(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="cursor-pointer ${item.is_packed ? 'line-through text-slate-500' : 'text-slate-200'}">${item.item_name}</span>
           </div>
+          <span class="text-[10px] text-slate-400 font-mono">${item.weight_g ? `${item.weight_g}g` : ''}</span>
         `;
+        container.appendChild(itemDiv);
       });
 
       document.getElementById('pack-weight-stat').innerText = `Gesamtgewicht: ${(totalWeight / 1000).toFixed(2)} kg`;
@@ -902,16 +1088,35 @@
       await loadEquipment();
     }
 
-    async function openNewEquipmentPrompt() {
-      const item_name = prompt("Gegenstand Name:");
-      if (!item_name) return;
-      const weight_g = prompt("Gewicht in Gramm (optional):", "0");
+    function openNewEquipmentModal() {
+      document.getElementById('equipment-sheet-title').innerText = '🎒 Ausrüstung erfassen';
+      document.getElementById('equipment-form').reset();
+      document.getElementById('equipment-form-id').value = '';
+      document.getElementById('equipment-sheet').classList.remove('hidden');
+    }
 
-      await supabaseClient.from('equipment').insert([{
-        item_name,
-        category: 'Elektronik',
-        weight_g: parseInt(weight_g) || 0
-      }]);
+    function openEditEquipmentModal(item) {
+      openNewEquipmentModal();
+      document.getElementById('equipment-sheet-title').innerText = 'Ausrüstung bearbeiten';
+      document.getElementById('equipment-form-id').value = item.id;
+      document.getElementById('equipment-form-name').value = item.item_name;
+      document.getElementById('equipment-form-cat').value = item.category;
+      document.getElementById('equipment-form-weight').value = item.weight_g || 0;
+    }
+
+    function closeEquipmentSheet() { document.getElementById('equipment-sheet').classList.add('hidden'); }
+
+    async function saveEquipmentEntry(e) {
+      e.preventDefault();
+      const id = document.getElementById('equipment-form-id').value;
+      const payload = {
+        item_name: document.getElementById('equipment-form-name').value,
+        category: document.getElementById('equipment-form-cat').value,
+        weight_g: parseInt(document.getElementById('equipment-form-weight').value) || 0
+      };
+      if (id) await supabaseClient.from('equipment').update(payload).eq('id', id);
+      else await supabaseClient.from('equipment').insert([payload]);
+      closeEquipmentSheet();
       await loadEquipment();
     }
 
@@ -1409,7 +1614,7 @@
       countries.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
-        opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
+        opt.innerText = `${c.flag_emoji || '🏳️️'} ${c.name}`;
         countrySelect.appendChild(opt);
       });
       document.getElementById('fame-sheet').classList.remove('hidden');
