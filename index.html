@@ -268,10 +268,52 @@
       </div>
     </section>
 
-    <!-- TAB 6: SAFE & TIPPS -->
-    <section id="tab-safe" class="tab-content hidden space-y-3">
-      <h2 class="text-lg font-bold mb-2 flex items-center gap-2">🛡️ Safe & Lifehacks</h2>
+    <!-- TAB 6: SAFE & LIFEHACKS -->
+    <section id="tab-safe" class="tab-content hidden space-y-4">
+      <h2 class="text-lg font-bold mb-2 flex items-center gap-2">🛡️ Safe & Länder-Lifehacks</h2>
       
+      <!-- LÄNDER-INFO CARD (DYNAMISCH) -->
+      <div class="bg-slate-800 border border-emerald-500/40 rounded-2xl p-4 shadow-xl space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+          <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-1.5" id="info-card-country-name">
+            📌 Lade Länderdaten...
+          </h3>
+          <span class="text-xs font-mono font-bold text-slate-300" id="info-card-capital-pop"></span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
+            <p class="text-[10px] uppercase text-slate-400 font-semibold">🛂 Visum & Aufenthalt</p>
+            <p class="font-bold text-slate-200 mt-0.5" id="info-card-visa-req">-</p>
+            <p class="text-[10px] text-emerald-400 font-mono mt-0.5" id="info-card-max-stay">-</p>
+          </div>
+
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
+            <p class="text-[10px] uppercase text-slate-400 font-semibold">🔌 Stecker & Netz</p>
+            <p class="font-bold text-slate-200 mt-0.5" id="info-card-power-plug">-</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 text-xs">
+          <p class="text-[10px] uppercase text-amber-400 font-semibold">📱 SIM-Karten & Internet-Tipps</p>
+          <p class="text-slate-300 mt-0.5 leading-relaxed" id="info-card-sim-tips">-</p>
+        </div>
+
+        <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 text-xs space-y-1">
+          <p class="text-[10px] uppercase text-rose-400 font-semibold">🏛️ Deutsche Botschaft & Notrufe</p>
+          <p class="text-slate-200 font-medium" id="info-card-embassy-address">-</p>
+          <p class="text-slate-400 font-mono" id="info-card-embassy-phone">-</p>
+          <p class="text-amber-400 font-mono font-bold pt-1 border-t border-slate-800" id="info-card-emergency">-</p>
+        </div>
+      </div>
+
+      <!-- KULTURELLE TABUS -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+        <h3 class="text-sm font-semibold text-purple-400 mb-2">💡 Kulturelle Tabus (Aktuelles Land)</h3>
+        <p id="safe-taboos" class="text-xs text-slate-300 leading-relaxed">Lade Verhaltensregeln...</p>
+      </div>
+
+      <!-- FIXED SYSTEM TIPS -->
       <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
         <h3 class="text-sm font-semibold text-rose-400 mb-2">🚨 Krankenversicherung</h3>
         <p class="text-xs text-slate-300">HanseMerkur Young Travellers Basic (ca. 1,63 €/Tag). 0€ Selbstbeteiligung.</p>
@@ -288,11 +330,6 @@
         <h3 class="text-sm font-semibold text-blue-400 mb-2">🏠 TrustedHousesitters</h3>
         <p class="text-xs text-slate-300">Währungsvorteil über Australien (AUD) nutzen.</p>
         <p class="text-xs text-slate-400 mt-1">Über VPN auf Australien stellen, Cache leeren und mit gebührenfreier Kreditkarte in AUD bezahlen.</p>
-      </div>
-
-      <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
-        <h3 class="text-sm font-semibold text-purple-400 mb-2">💡 Kulturelle Tabus (Aktuelles Land)</h3>
-        <p id="safe-taboos" class="text-xs text-slate-300 leading-relaxed"></p>
       </div>
     </section>
 
@@ -620,7 +657,6 @@
     };
 
     window.addEventListener('DOMContentLoaded', async () => {
-      // Aktueller Monat als Standard-Filter setzen
       document.getElementById('expense-month-filter').value = new Date().toISOString().slice(0, 7);
       await loadInitialData();
     });
@@ -635,8 +671,7 @@
       const { data: entryData } = await supabaseClient.from('entries').select('*').order('id');
       allEntries = entryData || [];
 
-      const { data: visitData, error: visitError } = await supabaseClient.from('visits').select('*');
-      if (visitError) console.warn('Hinweis: visits-Tabelle fehlt eventuell.', visitError);
+      const { data: visitData } = await supabaseClient.from('visits').select('*');
       allVisits = visitData || [];
 
       // Dropdowns befüllen
@@ -686,41 +721,60 @@
       const countryVisits = allVisits.filter(v => v.country_id === currentCountry.id).length;
       document.getElementById('country-stats-header').innerText = `${countryVisits} Besuche`;
 
+      await loadCountryInfo();
       updateCalcCurrencyInfo();
       renderMatrixTable();
       await loadVocabulary();
       renderVisitsList();
     }
 
-    // --- FINANZEN & AUSGABEN LOGIK ---
-    async function loadExpenses() {
-      const { data, error } = await supabaseClient.from('expenses').select('*').order('expense_date', { ascending: false });
-      if (error) {
-        console.warn('Hinweis: expenses-Tabelle fehlt eventuell in Supabase.', error);
+    // --- LÄNDER-INFO LADE-FUNKTION ---
+    async function loadCountryInfo() {
+      if (!currentCountry) return;
+      
+      const { data, error } = await supabaseClient
+        .from('country_info')
+        .select('*')
+        .eq('country_id', currentCountry.id)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('info-card-country-name').innerText = `${currentCountry.flag_emoji || '🏳️'} ${currentCountry.name}`;
+        document.getElementById('info-card-capital-pop').innerText = '';
+        document.getElementById('info-card-visa-req').innerText = 'Keine Daten vorhanden';
+        document.getElementById('info-card-max-stay').innerText = '-';
+        document.getElementById('info-card-power-plug').innerText = '-';
+        document.getElementById('info-card-sim-tips').innerText = 'Keine SIM-Tipps vorhanden.';
+        document.getElementById('info-card-embassy-address').innerText = '-';
+        document.getElementById('info-card-embassy-phone').innerText = '-';
+        document.getElementById('info-card-emergency').innerText = '-';
         return;
       }
+
+      document.getElementById('info-card-country-name').innerText = `${currentCountry.flag_emoji || '🏳️'} ${currentCountry.name} (${data.capital || 'Hauptstadt'})`;
+      document.getElementById('info-card-capital-pop').innerText = data.population ? `👥 ${data.population}` : '';
+      document.getElementById('info-card-visa-req').innerText = data.visa_req || 'Visumfrei';
+      document.getElementById('info-card-max-stay').innerText = data.max_stay ? `⏱️ Max. ${data.max_stay}` : '';
+      document.getElementById('info-card-power-plug').innerText = data.power_plug || 'Typ A/C';
+      document.getElementById('info-card-sim-tips').innerText = data.sim_tips || '-';
+      document.getElementById('info-card-embassy-address').innerText = data.embassy_address ? `📍 ${data.embassy_address}` : '-';
+      document.getElementById('info-card-embassy-phone').innerText = data.embassy_phone ? `📞 ${data.embassy_phone}` : '-';
+      document.getElementById('info-card-emergency').innerText = data.emergency_numbers ? `🚨 Notruf: ${data.emergency_numbers}` : '-';
+    }
+
+    // --- FINANZEN & AUSGABEN LOGIK ---
+    async function loadExpenses() {
+      const { data } = await supabaseClient.from('expenses').select('*').order('expense_date', { ascending: false });
       allExpenses = data || [];
       renderExpenseStats();
     }
 
     function renderExpenseStats() {
-      const selectedMonth = document.getElementById('expense-month-filter').value; // format: "YYYY-MM"
-      
-      // Filtern nach ausgewähltem Monat
+      const selectedMonth = document.getElementById('expense-month-filter').value;
       const monthExpenses = allExpenses.filter(e => e.expense_date && e.expense_date.startsWith(selectedMonth));
 
-      let total = 0;
-      let fixed = 0;
-      let variable = 0;
-      const catTotals = {
-        'Unterkunft': 0,
-        'Verpflegung': 0,
-        'Transport': 0,
-        'Aktivitäten': 0,
-        'Versicherung': 0,
-        'SIM/Tech': 0,
-        'Sonstiges': 0
-      };
+      let total = 0, fixed = 0, variable = 0;
+      const catTotals = { 'Unterkunft': 0, 'Verpflegung': 0, 'Transport': 0, 'Aktivitäten': 0, 'Versicherung': 0, 'SIM/Tech': 0, 'Sonstiges': 0 };
 
       monthExpenses.forEach(item => {
         const amt = parseFloat(item.amount) || 0;
@@ -737,7 +791,6 @@
       document.getElementById('exp-stat-variable').innerText = `${variable.toFixed(2)} €`;
       document.getElementById('exp-count-label').innerText = `${monthExpenses.length} Posten`;
 
-      // Kategorien Render-Balken
       const catContainer = document.getElementById('expense-category-bars');
       catContainer.innerHTML = '';
 
@@ -761,7 +814,6 @@
         }
       });
 
-      // Buchungen Rendern
       const listContainer = document.getElementById('expense-list-container');
       listContainer.innerHTML = '';
 
@@ -805,11 +857,7 @@
       document.getElementById('expense-form').reset();
       document.getElementById('exp-form-id').value = '';
       document.getElementById('exp-form-date').value = new Date().toISOString().split('T')[0];
-      
-      if (currentCountry) {
-        document.getElementById('exp-form-country').value = currentCountry.id;
-      }
-
+      if (currentCountry) document.getElementById('exp-form-country').value = currentCountry.id;
       document.getElementById('expense-sheet').classList.remove('hidden');
     }
 
@@ -832,7 +880,6 @@
 
     async function saveExpenseEntry(event) {
       event.preventDefault();
-
       const id = document.getElementById('exp-form-id').value;
       const payload = {
         title: document.getElementById('exp-form-title').value,
@@ -844,13 +891,8 @@
         notes: document.getElementById('exp-form-notes').value || null
       };
 
-      if (id) {
-        const { error } = await supabaseClient.from('expenses').update(payload).eq('id', id);
-        if (error) alert('Fehler beim Aktualisieren: ' + error.message);
-      } else {
-        const { error } = await supabaseClient.from('expenses').insert([payload]);
-        if (error) alert('Fehler beim Speichern: ' + error.message);
-      }
+      if (id) await supabaseClient.from('expenses').update(payload).eq('id', id);
+      else await supabaseClient.from('expenses').insert([payload]);
 
       closeExpenseSheet();
       await loadExpenses();
@@ -876,33 +918,24 @@
 
       if (source === 'local') {
         const val = parseFloat(document.getElementById('calc-input-local').value);
-        if (isNaN(val) || val === 0) {
-          document.getElementById('calc-input-eur').value = '';
-        } else {
-          document.getElementById('calc-input-eur').value = (val / rate).toFixed(2);
-        }
+        document.getElementById('calc-input-eur').value = (isNaN(val) || val === 0) ? '' : (val / rate).toFixed(2);
       } else {
         const val = parseFloat(document.getElementById('calc-input-eur').value);
-        if (isNaN(val) || val === 0) {
-          document.getElementById('calc-input-local').value = '';
-        } else {
-          document.getElementById('calc-input-local').value = (val * rate).toFixed(2);
-        }
+        document.getElementById('calc-input-local').value = (isNaN(val) || val === 0) ? '' : (val * rate).toFixed(2);
       }
     }
 
     function addQuickAmount(amount) {
       const input = document.getElementById('calc-input-local');
-      const currentVal = parseFloat(input.value) || 0;
-      input.value = currentVal + amount;
+      input.value = (parseFloat(input.value) || 0) + amount;
       convertCurrency('local');
     }
 
     function multiplyQuickAmount(factor) {
       const input = document.getElementById('calc-input-local');
-      const currentVal = parseFloat(input.value) || 0;
-      if (currentVal > 0) {
-        input.value = currentVal * factor;
+      const val = parseFloat(input.value) || 0;
+      if (val > 0) {
+        input.value = val * factor;
         convertCurrency('local');
       }
     }
@@ -933,8 +966,7 @@
         if (v.start_date) {
           const start = new Date(v.start_date);
           const end = v.end_date ? new Date(v.end_date) : new Date();
-          const diffTime = Math.abs(end - start);
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          const diffDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24));
           totalDaysAbroad += isNaN(diffDays) ? 0 : diffDays;
         }
       });
@@ -1035,9 +1067,8 @@
     async function saveEntry(event) {
       event.preventDefault();
       const entryId = document.getElementById('form-entry-id').value;
-      const countryId = document.getElementById('form-country-select').value;
       const payload = {
-        country_id: countryId,
+        country_id: document.getElementById('form-country-select').value,
         category_id: parseInt(document.getElementById('form-category-select').value),
         title: document.getElementById('form-title').value,
         status: document.getElementById('form-status').value,
@@ -1046,11 +1077,8 @@
         notes: document.getElementById('form-notes').value || null
       };
 
-      if (entryId) {
-        await supabaseClient.from('entries').update(payload).eq('id', entryId);
-      } else {
-        await supabaseClient.from('entries').insert([payload]);
-      }
+      if (entryId) await supabaseClient.from('entries').update(payload).eq('id', entryId);
+      else await supabaseClient.from('entries').insert([payload]);
 
       closeEntrySheet();
       await loadInitialData();
@@ -1060,9 +1088,7 @@
     function initMap() {
       if (!map) {
         map = L.map('map').setView([20, 100], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
       }
       const visitCountryIds = new Set(allVisits.map(v => v.country_id));
       const experiencedCountryIds = new Set(allEntries.filter(e => e.status === 'erlebt').map(e => e.country_id));
@@ -1277,6 +1303,7 @@
       if (tabName === 'zentrum') initMap();
       if (tabName === 'finanzen') loadExpenses();
       if (tabName === 'fame') loadHallOfFame();
+      if (tabName === 'safe') loadCountryInfo();
     }
   </script>
 </body>
