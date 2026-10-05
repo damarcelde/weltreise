@@ -588,7 +588,7 @@
     </div>
   </div>
 
-  <!-- NEU: DOKUMENTEN MODAL (SAFE) -->
+  <!-- DOKUMENTEN MODAL (SAFE) -->
   <div id="doc-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
@@ -605,12 +605,12 @@
           <div>
             <label class="block text-xs text-slate-400 mb-1">Typ</label>
             <select id="doc-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
-              <option value="Pass">🛂 Reisepass</option>
-              <option value="Führerschein">🪪 Führerschein</option>
-              <option value="Versicherung">🚨 Versicherung</option>
-              <option value="Impfpass">💉 Impfpass</option>
-              <option value="Kreditkarte">💳 Kreditkarte</option>
-              <option value="Sonstiges">📄 Sonstiges</option>
+              <option value="Pass">Passport / Reisepass</option>
+              <option value="Führerschein">Führerschein</option>
+              <option value="Versicherung">Versicherung</option>
+              <option value="Impfpass">Impfpass</option>
+              <option value="Kreditkarte">Kreditkarte</option>
+              <option value="Sonstiges">Sonstiges</option>
             </select>
           </div>
           <div>
@@ -631,7 +631,7 @@
     </div>
   </div>
 
-  <!-- NEU: TRANSPORT MODAL (SAFE) -->
+  <!-- TRANSPORT MODAL (SAFE) -->
   <div id="transport-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
@@ -654,10 +654,10 @@
           <div>
             <label class="block text-xs text-slate-400 mb-1">Verkehrsmittel</label>
             <select id="transport-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
-              <option value="Flug">✈️ Flug</option>
-              <option value="Zug">🚆 Zug</option>
-              <option value="Bus">🚌 Bus</option>
-              <option value="Fähre">⛴️ Fähre</option>
+              <option value="Flug">Flug</option>
+              <option value="Zug">Zug</option>
+              <option value="Bus">Bus</option>
+              <option value="Fähre">Fähre</option>
             </select>
           </div>
           <div>
@@ -674,7 +674,7 @@
     </div>
   </div>
 
-  <!-- NEU: EQUIPMENT MODAL (SAFE) -->
+  <!-- EQUIPMENT MODAL (SAFE) -->
   <div id="equipment-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
@@ -691,11 +691,11 @@
           <div>
             <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
             <select id="equipment-form-cat" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
-              <option value="Elektronik">💻 Elektronik</option>
-              <option value="Kleidung">👕 Kleidung</option>
-              <option value="Dokumente">📄 Dokumente</option>
-              <option value="Apotheke">💊 Apotheke</option>
-              <option value="Kulturtasche">🧴 Kulturtasche</option>
+              <option value="Elektronik">Elektronik</option>
+              <option value="Kleidung">Kleidung</option>
+              <option value="Dokumente">Dokumente</option>
+              <option value="Apotheke">Apotheke</option>
+              <option value="Kulturtasche">Kulturtasche</option>
             </select>
           </div>
           <div>
@@ -729,7 +729,7 @@
       <span class="text-lg">🔥</span><span class="text-[10px] font-medium">Fame</span>
     </button>
     <button onclick="switchTab('safe')" id="nav-safe" class="flex flex-col items-center gap-1 text-slate-400">
-      <span class="text-lg">🛡️️</span><span class="text-[10px] font-medium">Safe</span>
+      <span class="text-lg">🛡️</span><span class="text-[10px] font-medium">Safe</span>
     </button>
   </nav>
 
@@ -745,6 +745,7 @@
     let allVisits = [];
     let allFameEntries = [];
     let allExpenses = [];
+    let allEquipmentItems = [];
     let map = null;
     let mapMarkers = [];
 
@@ -919,8 +920,8 @@
           }
         }
 
-        const docIcons = { 'Pass': '🛂', 'Führerschein': '🪪', 'Versicherung': '🚨', 'Impfpass': '💉', 'Kreditkarte': '💳', 'Sonstiges': '📄' };
-        const icon = docIcons[doc.doc_type] || '📄';
+        const docIcons = { 'Pass': 'Passport', 'Führerschein': 'Führerschein', 'Versicherung': 'Versicherung', 'Impfpass': 'Impfpass', 'Kreditkarte': 'Kreditkarte', 'Sonstiges': 'Dokument' };
+        const icon = docIcons[doc.doc_type] || 'Dokument';
 
         const itemDiv = document.createElement('div');
         itemDiv.className = 'bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60 flex justify-between items-start text-xs cursor-pointer hover:bg-slate-800 transition';
@@ -929,7 +930,6 @@
         itemDiv.innerHTML = `
           <div class="space-y-0.5">
             <div class="flex items-center gap-1.5">
-              <span>${icon}</span>
               <strong class="text-slate-100 font-bold">${doc.title}</strong>
               ${warningBadge}
             </div>
@@ -1015,7 +1015,7 @@
     }
 
     function openNewTransportModal() {
-      document.getElementById('transport-sheet-title').innerText = '✈️️ Transport erfassen';
+      document.getElementById('transport-sheet-title').innerText = '✈️ Transport erfassen';
       document.getElementById('transport-form').reset();
       document.getElementById('transport-form-id').value = '';
       document.getElementById('transport-sheet').classList.remove('hidden');
@@ -1062,10 +1062,11 @@
         return;
       }
 
+      allEquipmentItems = items;
       container.innerHTML = '';
       let totalWeight = 0;
 
-      items.forEach(item => {
+      items.forEach((item, index) => {
         if (item.weight_g) totalWeight += item.weight_g;
         const itemDiv = document.createElement('div');
         itemDiv.className = 'bg-slate-900/80 p-2.5 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs';
@@ -1073,7 +1074,7 @@
         itemDiv.innerHTML = `
           <div class="flex items-center gap-2">
             <input type="checkbox" ${item.is_packed ? 'checked' : ''} onchange="togglePacked(${item.id}, this.checked)" class="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0">
-            <span onclick="openEditEquipmentModal(${JSON.stringify(item).replace(/"/g, '&quot;')})" class="cursor-pointer ${item.is_packed ? 'line-through text-slate-500' : 'text-slate-200'}">${item.item_name}</span>
+            <span onclick="editEquipmentByIndex(${index})" class="cursor-pointer ${item.is_packed ? 'line-through text-slate-500' : 'text-slate-200'}">${item.item_name}</span>
           </div>
           <span class="text-[10px] text-slate-400 font-mono">${item.weight_g ? `${item.weight_g}g` : ''}</span>
         `;
@@ -1081,6 +1082,11 @@
       });
 
       document.getElementById('pack-weight-stat').innerText = `Gesamtgewicht: ${(totalWeight / 1000).toFixed(2)} kg`;
+    }
+
+    function editEquipmentByIndex(index) {
+      const item = allEquipmentItems[index];
+      if (item) openEditEquipmentModal(item);
     }
 
     async function togglePacked(id, isChecked) {
@@ -1614,7 +1620,7 @@
       countries.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.id;
-        opt.innerText = `${c.flag_emoji || '🏳️️'} ${c.name}`;
+        opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
         countrySelect.appendChild(opt);
       });
       document.getElementById('fame-sheet').classList.remove('hidden');
