@@ -144,7 +144,7 @@
       </div>
     </section>
 
-    <!-- TAB 3: WÄHRUNGSRECHNER (TASCHENRECHNER STYLE) -->
+    <!-- TAB 3: WÄHRUNGSRECHNER -->
     <section id="tab-rechner" class="tab-content hidden space-y-4">
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl">
         
@@ -162,8 +162,6 @@
 
         <!-- Eingabefelder im Konverter-Style -->
         <div class="space-y-3">
-          
-          <!-- Eingabe Landeswährung -->
           <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/80 focus-within:border-emerald-500 transition">
             <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
               <span id="calc-label-local">Landeswährung</span>
@@ -175,14 +173,10 @@
             </div>
           </div>
 
-          <!-- Quick Swap Icon -->
           <div class="flex justify-center -my-1">
-            <div class="bg-slate-800 border border-slate-700 p-1.5 rounded-full text-slate-400 text-xs shadow-md">
-              ⇅
-            </div>
+            <div class="bg-slate-800 border border-slate-700 p-1.5 rounded-full text-slate-400 text-xs shadow-md">⇅</div>
           </div>
 
-          <!-- Eingabe Euro (€) -->
           <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/80 focus-within:border-emerald-500 transition">
             <div class="text-xs text-slate-400 mb-1">Betrag in Euro</div>
             <div class="flex items-center gap-2">
@@ -190,10 +184,8 @@
               <span class="text-sm font-mono text-slate-400 font-bold">EUR (€)</span>
             </div>
           </div>
-
         </div>
 
-        <!-- Intuitives Keypad / Schnellauswahl-Buttons -->
         <div class="mt-4 pt-3 border-t border-slate-700/50">
           <p class="text-[10px] text-slate-400 uppercase font-semibold mb-2">Schnell-Tasten (Landeswährung)</p>
           <div class="grid grid-cols-4 gap-2 text-xs font-mono">
@@ -215,13 +207,68 @@
     <!-- TAB 4: SPRACHEN -->
     <section id="tab-sprachen" class="tab-content hidden">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold flex items-center gap-2">🗣️️ Vokabel-Trainer</h2>
+        <h2 class="text-lg font-bold flex items-center gap-2">🗣️ Vokabel-Trainer</h2>
         <button onclick="openNewVocabModal()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium">+ Neu</button>
       </div>
       <div id="vocab-list" class="space-y-2"></div>
     </section>
 
-    <!-- TAB 5: SAFE & TIPPS -->
+    <!-- TAB 5: FINANZEN & AUSGABEN-TRACKER -->
+    <section id="tab-finanzen" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">💰 Finanz-Tracker</h2>
+          <p class="text-[10px] text-slate-400">Ausgaben, Fixkosten & Monatsstatistik</p>
+        </div>
+        <button onclick="openNewExpenseModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+          + Ausgabe
+        </button>
+      </div>
+
+      <!-- Monats-Auswahl & Gesamt-Kopfzeile -->
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
+          <label class="text-xs text-slate-400 font-semibold uppercase">Monat wählen:</label>
+          <input type="month" id="expense-month-filter" onchange="renderExpenseStats()" class="bg-slate-900 text-emerald-400 font-mono text-xs font-bold px-2 py-1 rounded border border-slate-700 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center pt-1">
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-semibold">Gesamt</p>
+            <p class="text-lg font-mono font-extrabold text-white mt-0.5" id="exp-stat-total">0,00 €</p>
+          </div>
+          <div class="border-x border-slate-700/60 px-1">
+            <p class="text-xs text-slate-400 uppercase font-semibold">Fixkosten</p>
+            <p class="text-lg font-mono font-extrabold text-rose-400 mt-0.5" id="exp-stat-fixed">0,00 €</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-semibold">Variabel</p>
+            <p class="text-lg font-mono font-extrabold text-emerald-400 mt-0.5" id="exp-stat-variable">0,00 €</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistik-Balken nach Kategorien -->
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
+        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Kategorien-Aufschlüsselung</h3>
+        <div id="expense-category-bars" class="space-y-2.5">
+          <p class="text-xs text-slate-500 italic text-center">Lade Statistiken...</p>
+        </div>
+      </div>
+
+      <!-- Ausgaben-Liste -->
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
+          <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Buchungen im Monat</h3>
+          <span class="text-[10px] text-slate-500" id="exp-count-label">0 Posten</span>
+        </div>
+        <div id="expense-list-container" class="space-y-2 divide-y divide-slate-700/40">
+          <p class="text-xs text-slate-500 italic text-center py-4">Keine Ausgaben in diesem Monat.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: SAFE & TIPPS -->
     <section id="tab-safe" class="tab-content hidden space-y-3">
       <h2 class="text-lg font-bold mb-2 flex items-center gap-2">🛡️ Safe & Lifehacks</h2>
       
@@ -249,7 +296,7 @@
       </div>
     </section>
 
-    <!-- TAB 6: HALL OF FAME -->
+    <!-- TAB 7: HALL OF FAME -->
     <section id="tab-fame" class="tab-content hidden space-y-4">
       <div class="flex justify-between items-center">
         <div>
@@ -261,7 +308,6 @@
         </button>
       </div>
 
-      <!-- Fame Statistiken -->
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl flex justify-around text-center">
         <div>
           <p class="text-2xl font-extrabold text-rose-400" id="fame-stat-total">0</p>
@@ -277,7 +323,6 @@
         </div>
       </div>
 
-      <!-- Galerie / Liste der Begegnungen -->
       <div id="fame-cards-container" class="grid grid-cols-2 gap-3">
         <p class="col-span-2 text-center text-slate-500 py-8 text-xs">Lade Hall of Fame...</p>
       </div>
@@ -285,7 +330,75 @@
 
   </main>
 
-  <!-- BEARBEITEN & EINGABE MODAL MATRIX (BOTTOM SHEET) -->
+  <!-- MODAL FÜR AUSGABEN (BOTTOM SHEET) -->
+  <div id="expense-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="expense-sheet-title" class="text-lg font-bold text-slate-100">💰 Neue Ausgabe erfassen</h3>
+        <button onclick="closeExpenseSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+
+      <form id="expense-form" onsubmit="saveExpenseEntry(event)" class="space-y-4">
+        <input type="hidden" id="exp-form-id">
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Titel / Bezeichnung</label>
+          <input type="text" id="exp-form-title" required placeholder="z. B. Hotel Tokio, Krankenversicherung, Abendessen" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Betrag in Euro (€)</label>
+            <input type="number" step="0.01" id="exp-form-amount" required placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono font-bold text-emerald-400 focus:border-emerald-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Kosten-Art</label>
+            <select id="exp-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="variable">💸 Variable Kosten</option>
+              <option value="fixed">📌 Fixkosten</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
+            <select id="exp-form-category" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Unterkunft">🏠 Unterkunft</option>
+              <option value="Verpflegung">🍜 Verpflegung / Food</option>
+              <option value="Transport">✈️ Transport & Flüge</option>
+              <option value="Aktivitäten">🎟️ Aktivitäten & Ausflüge</option>
+              <option value="Versicherung">🚨 Versicherung</option>
+              <option value="SIM/Tech">📱 SIM / Tech / Abos</option>
+              <option value="Sonstiges">📦 Sonstiges</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Datum</label>
+            <input type="date" id="exp-form-date" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Zuordnung Land (Optional)</label>
+          <select id="exp-form-country" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+            <option value="">-- Keinem Land zugeordnet --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Notizen (Optional)</label>
+          <input type="text" id="exp-form-notes" placeholder="z. B. In Landeswährung gezahlt" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none text-white">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
+          Ausgabe speichern
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- BEARBEITEN & EINGABE MODAL MATRIX -->
   <div id="entry-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
@@ -295,24 +408,18 @@
 
       <form id="entry-form" onsubmit="saveEntry(event)" class="space-y-4">
         <input type="hidden" id="form-entry-id">
-        
         <div>
           <label class="block text-xs text-slate-400 mb-1">Land auswählen</label>
-          <select id="form-country-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-          </select>
+          <select id="form-country-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></select>
         </div>
-
         <div>
           <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
-          <select id="form-category-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-          </select>
+          <select id="form-category-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></select>
         </div>
-
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Titel / Erlebnis (Zweizeilig)</label>
+          <label class="block text-xs text-slate-400 mb-1">Titel / Erlebnis</label>
           <textarea id="form-title" rows="2" required placeholder="Titel des Erlebnisses..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none resize-none"></textarea>
         </div>
-
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-slate-400 mb-1">Status</label>
@@ -334,30 +441,18 @@
             </select>
           </div>
         </div>
-
         <div>
-          <div class="flex justify-between items-center mb-1">
-            <label class="block text-xs text-slate-400">Ort / Region (Optional)</label>
-            <button type="button" onclick="openFormLocationInMaps()" id="form-maps-btn" class="hidden text-[10px] text-emerald-400 hover:underline flex items-center gap-1">
-              🗺️ In Google Maps öffnen
-            </button>
-          </div>
-          <input type="text" id="form-location" oninput="toggleFormMapsBtn()" placeholder="z. B. Shibuya, Tokio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+          <input type="text" id="form-location" placeholder="z. B. Shibuya, Tokio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
         </div>
-
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Notizen & Details</label>
-          <textarea id="form-notes" rows="3" placeholder="Besondere Erinnerungen, Kosten, Tipps..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea>
+          <textarea id="form-notes" rows="3" placeholder="Besondere Erinnerungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea>
         </div>
-
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
-          Speichern
-        </button>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
       </form>
     </div>
   </div>
 
-  <!-- HALL OF FAME MODAL (BOTTOM SHEET MIT DIREKTEM BILD-UPLOAD) -->
+  <!-- HALL OF FAME MODAL -->
   <div id="fame-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
@@ -377,8 +472,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-slate-400 mb-1">Land der Begegnung</label>
-            <select id="fame-form-country" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
-            </select>
+            <select id="fame-form-country" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></select>
           </div>
           <div>
             <label class="block text-xs text-slate-400 mb-1">Geschlecht</label>
@@ -392,29 +486,23 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Nationalität</label>
             <input type="text" id="fame-form-nationality" placeholder="z. B. Japanisch" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
           </div>
           <div>
-            <label class="block text-xs text-slate-400 mb-1">Datum</label>
             <input type="date" id="fame-form-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Ort / Hotspot / Love Hotel</label>
           <input type="text" id="fame-form-location" placeholder="z. B. Hotel Atlas, Shinjuku" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
         </div>
 
-        <!-- BILD UPLOAD BEREICH -->
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Foto hochladen (aus Galerie/Kamera)</label>
           <input type="file" id="fame-form-file" accept="image/*" class="w-full text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg p-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-rose-600 file:text-white hover:file:bg-rose-500 cursor-pointer">
           <p id="fame-photo-status" class="text-[10px] text-slate-500 mt-1 italic hidden">Bereits ein Foto vorhanden.</p>
         </div>
 
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Bewertung & Chemistry</label>
           <select id="fame-form-rating" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
             <option value="5">🔥🔥🔥🔥🔥 (Unvergesslich)</option>
             <option value="4">🔥🔥🔥🔥 (Sehr gut)</option>
@@ -425,13 +513,10 @@
         </div>
 
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Details & Erinnerungen</label>
-          <textarea id="fame-form-notes" rows="3" placeholder="Wie habt ihr euch kennengelernt? Besonderheiten..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white"></textarea>
+          <textarea id="fame-form-notes" rows="3" placeholder="Details & Erinnerungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white"></textarea>
         </div>
 
-        <button type="submit" id="fame-submit-btn" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
-          Eintrag in Hall of Fame speichern
-        </button>
+        <button type="submit" id="fame-submit-btn" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
       </form>
     </div>
   </div>
@@ -446,6 +531,9 @@
     </button>
     <button onclick="switchTab('rechner')" id="nav-rechner" class="flex flex-col items-center gap-1 text-slate-400">
       <span class="text-lg">💱</span><span class="text-[10px] font-medium">Rechner</span>
+    </button>
+    <button onclick="switchTab('finanzen')" id="nav-finanzen" class="flex flex-col items-center gap-1 text-slate-400">
+      <span class="text-lg">💰</span><span class="text-[10px] font-medium">Finanzen</span>
     </button>
     <button onclick="switchTab('sprachen')" id="nav-sprachen" class="flex flex-col items-center gap-1 text-slate-400">
       <span class="text-lg">🗣️</span><span class="text-[10px] font-medium">Sprachen</span>
@@ -469,10 +557,20 @@
     let allEntries = [];
     let allVisits = [];
     let allFameEntries = [];
+    let allExpenses = [];
     let map = null;
     let mapMarkers = [];
 
-    // Wechselkurse & Währungsnamen
+    const categoryIcons = {
+      'Unterkunft': '🏠',
+      'Verpflegung': '🍜',
+      'Transport': '✈️',
+      'Aktivitäten': '🎟️',
+      'Versicherung': '🚨',
+      'SIM/Tech': '📱',
+      'Sonstiges': '📦'
+    };
+
     const exchangeData = {
       THB: { rate: 38.50, name: 'Thailändischer Baht' },
       JPY: { rate: 160.20, name: 'Japanischer Yen' },
@@ -522,6 +620,8 @@
     };
 
     window.addEventListener('DOMContentLoaded', async () => {
+      // Aktueller Monat als Standard-Filter setzen
+      document.getElementById('expense-month-filter').value = new Date().toISOString().slice(0, 7);
       await loadInitialData();
     });
 
@@ -545,8 +645,11 @@
       
       const formCountrySelect = document.getElementById('form-country-select');
       const formCatSelect = document.getElementById('form-category-select');
+      const expCountrySelect = document.getElementById('exp-form-country');
+      
       formCountrySelect.innerHTML = '';
       formCatSelect.innerHTML = '';
+      expCountrySelect.innerHTML = '<option value="">-- Keinem Land zugeordnet --</option>';
 
       countries.forEach(c => {
         const opt = document.createElement('option');
@@ -555,8 +658,8 @@
         opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
         select.appendChild(opt);
 
-        const optForm = opt.cloneNode(true);
-        formCountrySelect.appendChild(optForm);
+        formCountrySelect.appendChild(opt.cloneNode(true));
+        expCountrySelect.appendChild(opt.cloneNode(true));
       });
 
       categories.forEach(cat => {
@@ -584,13 +687,176 @@
       document.getElementById('country-stats-header').innerText = `${countryVisits} Besuche`;
 
       updateCalcCurrencyInfo();
-
       renderMatrixTable();
       await loadVocabulary();
       renderVisitsList();
     }
 
-    // WÄHRUNGSRECHNER LOGIK & ANZEIGE
+    // --- FINANZEN & AUSGABEN LOGIK ---
+    async function loadExpenses() {
+      const { data, error } = await supabaseClient.from('expenses').select('*').order('expense_date', { ascending: false });
+      if (error) {
+        console.warn('Hinweis: expenses-Tabelle fehlt eventuell in Supabase.', error);
+        return;
+      }
+      allExpenses = data || [];
+      renderExpenseStats();
+    }
+
+    function renderExpenseStats() {
+      const selectedMonth = document.getElementById('expense-month-filter').value; // format: "YYYY-MM"
+      
+      // Filtern nach ausgewähltem Monat
+      const monthExpenses = allExpenses.filter(e => e.expense_date && e.expense_date.startsWith(selectedMonth));
+
+      let total = 0;
+      let fixed = 0;
+      let variable = 0;
+      const catTotals = {
+        'Unterkunft': 0,
+        'Verpflegung': 0,
+        'Transport': 0,
+        'Aktivitäten': 0,
+        'Versicherung': 0,
+        'SIM/Tech': 0,
+        'Sonstiges': 0
+      };
+
+      monthExpenses.forEach(item => {
+        const amt = parseFloat(item.amount) || 0;
+        total += amt;
+        if (item.type === 'fixed') fixed += amt;
+        else variable += amt;
+
+        const cat = item.category || 'Sonstiges';
+        catTotals[cat] = (catTotals[cat] || 0) + amt;
+      });
+
+      document.getElementById('exp-stat-total').innerText = `${total.toFixed(2)} €`;
+      document.getElementById('exp-stat-fixed').innerText = `${fixed.toFixed(2)} €`;
+      document.getElementById('exp-stat-variable').innerText = `${variable.toFixed(2)} €`;
+      document.getElementById('exp-count-label').innerText = `${monthExpenses.length} Posten`;
+
+      // Kategorien Render-Balken
+      const catContainer = document.getElementById('expense-category-bars');
+      catContainer.innerHTML = '';
+
+      Object.keys(catTotals).forEach(cat => {
+        const catAmount = catTotals[cat];
+        const percent = total > 0 ? Math.round((catAmount / total) * 100) : 0;
+        const icon = categoryIcons[cat] || '📦';
+
+        if (catAmount > 0 || total === 0) {
+          catContainer.innerHTML += `
+            <div>
+              <div class="flex justify-between items-center text-xs mb-1">
+                <span class="text-slate-300 font-medium">${icon} ${cat}</span>
+                <span class="text-slate-400 font-mono"><strong class="text-white">${catAmount.toFixed(2)} €</strong> (${percent}%)</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/60">
+                <div class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      // Buchungen Rendern
+      const listContainer = document.getElementById('expense-list-container');
+      listContainer.innerHTML = '';
+
+      if (monthExpenses.length === 0) {
+        listContainer.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-6">Keine Ausgaben im Monat ${selectedMonth} erfasst.</p>`;
+        return;
+      }
+
+      monthExpenses.forEach(item => {
+        const country = countries.find(c => c.id === item.country_id);
+        const icon = categoryIcons[item.category] || '📦';
+        const isFixed = item.type === 'fixed';
+
+        const div = document.createElement('div');
+        div.onclick = () => openEditExpenseModal(item);
+        div.className = 'pt-2 flex justify-between items-center cursor-pointer hover:bg-slate-700/30 p-1.5 rounded transition';
+
+        div.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="text-lg">${icon}</span>
+            <div>
+              <p class="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                ${item.title}
+                ${isFixed ? '<span class="text-[8px] bg-rose-950 text-rose-400 border border-rose-800 px-1 rounded">Fix</span>' : ''}
+              </p>
+              <p class="text-[10px] text-slate-400 mt-0.5">
+                📅 ${item.expense_date} ${country ? `• ${country.flag_emoji}` : ''} ${item.notes ? `• ${item.notes}` : ''}
+              </p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-mono font-bold ${isFixed ? 'text-rose-400' : 'text-emerald-400'}">-${parseFloat(item.amount).toFixed(2)} €</p>
+          </div>
+        `;
+        listContainer.appendChild(div);
+      });
+    }
+
+    function openNewExpenseModal() {
+      document.getElementById('expense-sheet-title').innerText = '💰 Neue Ausgabe erfassen';
+      document.getElementById('expense-form').reset();
+      document.getElementById('exp-form-id').value = '';
+      document.getElementById('exp-form-date').value = new Date().toISOString().split('T')[0];
+      
+      if (currentCountry) {
+        document.getElementById('exp-form-country').value = currentCountry.id;
+      }
+
+      document.getElementById('expense-sheet').classList.remove('hidden');
+    }
+
+    function openEditExpenseModal(item) {
+      openNewExpenseModal();
+      document.getElementById('expense-sheet-title').innerText = 'Ausgabe bearbeiten';
+      document.getElementById('exp-form-id').value = item.id;
+      document.getElementById('exp-form-title').value = item.title;
+      document.getElementById('exp-form-amount').value = item.amount;
+      document.getElementById('exp-form-type').value = item.type || 'variable';
+      document.getElementById('exp-form-category').value = item.category || 'Sonstiges';
+      document.getElementById('exp-form-date').value = item.expense_date || '';
+      document.getElementById('exp-form-country').value = item.country_id || '';
+      document.getElementById('exp-form-notes').value = item.notes || '';
+    }
+
+    function closeExpenseSheet() {
+      document.getElementById('expense-sheet').classList.add('hidden');
+    }
+
+    async function saveExpenseEntry(event) {
+      event.preventDefault();
+
+      const id = document.getElementById('exp-form-id').value;
+      const payload = {
+        title: document.getElementById('exp-form-title').value,
+        amount: parseFloat(document.getElementById('exp-form-amount').value),
+        type: document.getElementById('exp-form-type').value,
+        category: document.getElementById('exp-form-category').value,
+        expense_date: document.getElementById('exp-form-date').value,
+        country_id: document.getElementById('exp-form-country').value || null,
+        notes: document.getElementById('exp-form-notes').value || null
+      };
+
+      if (id) {
+        const { error } = await supabaseClient.from('expenses').update(payload).eq('id', id);
+        if (error) alert('Fehler beim Aktualisieren: ' + error.message);
+      } else {
+        const { error } = await supabaseClient.from('expenses').insert([payload]);
+        if (error) alert('Fehler beim Speichern: ' + error.message);
+      }
+
+      closeExpenseSheet();
+      await loadExpenses();
+    }
+
+    // WÄHRUNGSRECHNER
     function updateCalcCurrencyInfo() {
       const code = currentCountry?.currency_code || 'USD';
       const info = exchangeData[code] || { rate: 1.0, name: 'Auslandswährung' };
@@ -702,39 +968,13 @@
       updateMapMarkers(visitedCountryIds);
     }
 
-    // MAPS LINK ÖFFNEN
-    function openMaps(locationText, event) {
-      if (event) event.stopPropagation();
-      const query = encodeURIComponent(`${locationText}, ${currentCountry ? currentCountry.name : ''}`);
-      window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
-    }
-
-    function toggleFormMapsBtn() {
-      const val = document.getElementById('form-location').value.trim();
-      const btn = document.getElementById('form-maps-btn');
-      if (val) btn.classList.remove('hidden');
-      else btn.classList.add('hidden');
-    }
-
-    function openFormLocationInMaps() {
-      const val = document.getElementById('form-location').value.trim();
-      const selectedCountryId = document.getElementById('form-country-select').value;
-      const targetCountry = countries.find(c => c.id === selectedCountryId);
-      if (val) {
-        const query = encodeURIComponent(`${val}, ${targetCountry ? targetCountry.name : ''}`);
-        window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
-      }
-    }
-
-    // MATRIX TABELLE RENDERN
+    // MATRIX TABELLE
     function renderMatrixTable() {
       const tbody = document.getElementById('matrix-table-body');
       tbody.innerHTML = '';
-
       if (!currentCountry) return;
 
       const countryEntries = allEntries.filter(e => e.country_id === currentCountry.id);
-
       if (countryEntries.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" class="text-center text-slate-500 py-8">Keine Erlebnisse für ${currentCountry.name} hinterlegt.</td></tr>`;
         return;
@@ -759,11 +999,7 @@
           <td class="p-2.5 text-center text-base">${category.icon}</td>
           <td class="p-2.5">
             <div class="font-medium text-slate-100">${shortTitle}</div>
-            ${item.location ? `
-              <div onclick="openMaps('${item.location.replace(/'/g, "\\'")}', event)" class="text-[10px] text-emerald-400 hover:underline flex items-center gap-0.5 mt-0.5 cursor-pointer w-fit">
-                📍 ${item.location}
-              </div>
-            ` : ''}
+            ${item.location ? `<div class="text-[10px] text-emerald-400 mt-0.5">📍 ${item.location}</div>` : ''}
           </td>
           <td class="p-2.5 text-right whitespace-nowrap">${statusBadge}</td>
         `;
@@ -771,21 +1007,14 @@
       });
     }
 
-    // MODAL FÜR NEUES ERLEBNIS
     function openNewEntryModal() {
       document.getElementById('sheet-title').innerText = '+ Neues Erlebnis anlegen';
       document.getElementById('entry-form').reset();
       document.getElementById('form-entry-id').value = '';
-      
-      if (currentCountry) {
-        document.getElementById('form-country-select').value = currentCountry.id;
-      }
-      toggleFormMapsBtn();
-
+      if (currentCountry) document.getElementById('form-country-select').value = currentCountry.id;
       document.getElementById('entry-sheet').classList.remove('hidden');
     }
 
-    // MODAL ZUM BEARBEITEN
     function openEditEntryModal(item) {
       document.getElementById('sheet-title').innerText = 'Erlebnis bearbeiten';
       document.getElementById('form-entry-id').value = item.id;
@@ -796,8 +1025,6 @@
       document.getElementById('form-rating').value = item.rating || 0;
       document.getElementById('form-location').value = item.location || '';
       document.getElementById('form-notes').value = item.notes || '';
-
-      toggleFormMapsBtn();
       document.getElementById('entry-sheet').classList.remove('hidden');
     }
 
@@ -805,50 +1032,28 @@
       document.getElementById('entry-sheet').classList.add('hidden');
     }
 
-    // SPEICHERN MATRIX ENTRY
     async function saveEntry(event) {
       event.preventDefault();
-
       const entryId = document.getElementById('form-entry-id').value;
       const countryId = document.getElementById('form-country-select').value;
-      const ratingValue = parseInt(document.getElementById('form-rating').value);
-      
       const payload = {
         country_id: countryId,
         category_id: parseInt(document.getElementById('form-category-select').value),
         title: document.getElementById('form-title').value,
         status: document.getElementById('form-status').value,
-        rating: ratingValue > 0 ? ratingValue : null,
+        rating: parseInt(document.getElementById('form-rating').value) || null,
         location: document.getElementById('form-location').value || null,
         notes: document.getElementById('form-notes').value || null
       };
 
       if (entryId) {
-        const { error } = await supabaseClient.from('entries').update(payload).eq('id', entryId);
-        if (error) {
-          alert('Fehler beim Aktualisieren: ' + error.message);
-          return;
-        }
-        const index = allEntries.findIndex(e => e.id == entryId);
-        if (index !== -1) allEntries[index] = { ...allEntries[index], ...payload };
+        await supabaseClient.from('entries').update(payload).eq('id', entryId);
       } else {
-        const { data, error } = await supabaseClient.from('entries').insert([payload]).select();
-        if (error) {
-          alert('Fehler beim Erstellen: ' + error.message);
-          return;
-        }
-        if (data) allEntries.push(data[0]);
+        await supabaseClient.from('entries').insert([payload]);
       }
 
-      calculateGlobalStats();
       closeEntrySheet();
-
-      if (countryId !== currentCountry?.id) {
-        document.getElementById('country-select').value = countryId;
-        await changeCountry(countryId);
-      } else {
-        renderMatrixTable();
-      }
+      await loadInitialData();
     }
 
     // MAP INITIALISIERUNG
@@ -859,20 +1064,16 @@
           attribution: '© OpenStreetMap'
         }).addTo(map);
       }
-
       const visitCountryIds = new Set(allVisits.map(v => v.country_id));
       const experiencedCountryIds = new Set(allEntries.filter(e => e.status === 'erlebt').map(e => e.country_id));
       updateMapMarkers(new Set([...visitCountryIds, ...experiencedCountryIds]));
-
       setTimeout(() => map.invalidateSize(), 300);
     }
 
     function updateMapMarkers(visitedCountryIds) {
       if (!map) return;
-      
       mapMarkers.forEach(m => map.removeLayer(m));
       mapMarkers = [];
-
       countries.forEach(c => {
         if (visitedCountryIds.has(c.id) && countryCoords[c.name]) {
           const marker = L.marker(countryCoords[c.name]).addTo(map).bindPopup(`<b>${c.flag_emoji || '🏳️'} ${c.name}</b><br>Bereist!`);
@@ -886,7 +1087,6 @@
       const container = document.getElementById('visits-list');
       if (!currentCountry) return;
       const cVisits = allVisits.filter(v => v.country_id === currentCountry.id);
-      
       if (cVisits.length === 0) {
         container.innerHTML = '<p class="text-xs text-slate-500 italic">Noch keine Besuche eingetragen.</p>';
         return;
@@ -897,80 +1097,54 @@
           <div class="bg-slate-800 p-2.5 rounded-lg border border-slate-700 text-xs">
             <div class="font-bold text-slate-200">${v.title || 'Aufenthalt'}</div>
             <div class="text-slate-400 mt-1">📅 ${v.start_date} - ${v.end_date || 'Offen'}</div>
-            ${v.travel_type ? `<div class="text-emerald-400 mt-1">🎒 ${v.travel_type}</div>` : ''}
           </div>
         `;
       });
     }
 
     async function addVisitPrompt() {
-      const title = prompt("Besuch Name (z.B. Herbst-Trip 2026):");
-      if(!title) return;
+      const title = prompt("Besuch Name:");
+      if (!title) return;
       const start = prompt("Startdatum (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-      const end = prompt("Enddatum (YYYY-MM-DD, optional):", "");
-      
-      const payload = {
-        country_id: currentCountry.id,
-        title: title,
-        start_date: start,
-        end_date: end || null,
-        travel_type: 'Backpacking'
-      };
-
-      const { data, error } = await supabaseClient.from('visits').insert([payload]).select();
-
-      if(!error && data) {
-        allVisits.push(data[0]);
-        calculateGlobalStats();
-        renderVisitsList();
-        document.getElementById('country-stats-header').innerText = `${allVisits.filter(v => v.country_id === currentCountry.id).length} Besuche`;
-      }
+      const payload = { country_id: currentCountry.id, title, start_date: start, travel_type: 'Backpacking' };
+      await supabaseClient.from('visits').insert([payload]);
+      await loadInitialData();
     }
 
     async function loadVocabulary() {
       const container = document.getElementById('vocab-list');
       if (!currentCountry) return;
       const { data: vocabs } = await supabaseClient.from('vocabulary').select('*').eq('country_id', currentCountry.id);
-      
-      container.innerHTML = (!vocabs || vocabs.length === 0) 
-        ? `<p class="text-center text-xs text-slate-500 py-6">Keine Vokabeln für ${currentCountry.name}.</p>` 
-        : '';
-      
+      container.innerHTML = (!vocabs || vocabs.length === 0) ? `<p class="text-center text-xs text-slate-500 py-6">Keine Vokabeln.</p>` : '';
       vocabs?.forEach(v => {
         container.innerHTML += `
-          <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+          <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
             <div>
-              <div class="text-sm font-bold text-emerald-400">${v.original_phrase}</div>
-              <div class="text-xs text-slate-300 mt-0.5">${v.translation}</div>
+              <div class="font-bold text-emerald-400">${v.original_phrase}</div>
+              <div class="text-slate-300">${v.translation}</div>
             </div>
-            <button onclick="speakText('${v.original_phrase}')" class="text-lg bg-slate-700 p-2 rounded-lg">🔊</button>
+            <button onclick="speakText('${v.original_phrase}')" class="bg-slate-700 p-2 rounded-lg">🔊</button>
           </div>
         `;
       });
     }
 
     function speakText(text) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-      }
+      if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
     }
 
     async function openNewVocabModal() {
-      const phrase = prompt("Vokabel in Landessprache (z.B. Sawasdee):");
-      const translation = phrase ? prompt("Übersetzung auf Deutsch (z.B. Hallo):") : null;
+      const phrase = prompt("Vokabel:");
+      const translation = phrase ? prompt("Übersetzung:") : null;
       if (translation) {
-        await supabaseClient.from('vocabulary').insert([{ country_id: currentCountry.id, original_phrase: phrase, translation: translation }]);
+        await supabaseClient.from('vocabulary').insert([{ country_id: currentCountry.id, original_phrase: phrase, translation }]);
         await loadVocabulary();
       }
     }
 
-    // --- HALL OF FAME LOGIK & UPLOAD ---
+    // HALL OF FAME LOGIK
     async function loadHallOfFame() {
-      const { data, error } = await supabaseClient.from('hall_of_fame').select('*').order('encounter_date', { ascending: false });
-      if (error) {
-        console.warn('Hinweis: hall_of_fame-Tabelle fehlt evtl. noch in Supabase.', error);
-        return;
-      }
+      const { data } = await supabaseClient.from('hall_of_fame').select('*').order('encounter_date', { ascending: false });
       allFameEntries = data || [];
       renderHallOfFame();
     }
@@ -979,26 +1153,20 @@
       const container = document.getElementById('fame-cards-container');
       container.innerHTML = '';
 
-      const totalEnounters = allFameEntries.length;
-      const uniqueCountries = new Set(allFameEntries.map(e => e.country_id)).size;
-      const targetPercent = countries.length > 0 ? ((uniqueCountries / countries.length) * 100).toFixed(0) : 0;
-
-      document.getElementById('fame-stat-total').innerText = totalEnounters;
-      document.getElementById('fame-stat-countries').innerText = uniqueCountries;
-      document.getElementById('fame-stat-target-percent').innerText = `${targetPercent}%`;
+      document.getElementById('fame-stat-total').innerText = allFameEntries.length;
+      document.getElementById('fame-stat-countries').innerText = new Set(allFameEntries.map(e => e.country_id)).size;
+      document.getElementById('fame-stat-target-percent').innerText = countries.length > 0 ? `${((new Set(allFameEntries.map(e => e.country_id)).size / countries.length) * 100).toFixed(0)}%` : '0%';
 
       if (allFameEntries.length === 0) {
-        container.innerHTML = `<p class="col-span-2 text-center text-slate-500 py-10 text-xs italic">Noch keine Einträge in der Hall of Fame. Zeit für das erste Abenteuer! 🔥</p>`;
+        container.innerHTML = `<p class="col-span-2 text-center text-slate-500 py-10 text-xs italic">Noch keine Einträge. 🔥</p>`;
         return;
       }
 
       allFameEntries.forEach(item => {
         const country = countries.find(c => c.id === item.country_id) || { flag_emoji: '🌍', name: 'Unbekannt' };
-        const ratingFlames = '🔥'.repeat(item.rating || 5);
-
         const card = document.createElement('div');
         card.onclick = () => openEditFameModal(item);
-        card.className = 'bg-slate-800 rounded-xl border border-slate-700/60 overflow-hidden shadow-lg cursor-pointer hover:border-rose-500/50 transition flex flex-col justify-between';
+        card.className = 'bg-slate-800 rounded-xl border border-slate-700/60 overflow-hidden shadow-lg cursor-pointer flex flex-col justify-between';
 
         const imageHeader = item.photo_url 
           ? `<div class="h-28 w-full bg-cover bg-center" style="background-image: url('${item.photo_url}')"></div>` 
@@ -1009,17 +1177,9 @@
           <div class="p-3">
             <div class="flex justify-between items-start">
               <h3 class="font-bold text-slate-100 text-sm">${item.name}</h3>
-              <span class="text-xs" title="${country.name}">${country.flag_emoji}</span>
+              <span class="text-xs">${country.flag_emoji}</span>
             </div>
             <p class="text-[10px] text-rose-400 font-medium mt-0.5">${item.nationality || country.name}</p>
-            <div class="text-[10px] text-slate-400 mt-2 space-y-0.5">
-              ${item.location ? `<div>📍 ${item.location}</div>` : ''}
-              ${item.encounter_date ? `<div>📅 ${item.encounter_date}</div>` : ''}
-            </div>
-            <div class="text-[9px] mt-2 pt-2 border-t border-slate-700/50 flex justify-between items-center">
-              <span>${ratingFlames}</span>
-              <span class="text-slate-500 uppercase text-[8px]">${item.gender || '♀️'}</span>
-            </div>
           </div>
         `;
         container.appendChild(card);
@@ -1030,10 +1190,7 @@
       document.getElementById('fame-sheet-title').innerText = '🔥 Neuer Hall of Fame Eintrag';
       document.getElementById('fame-form').reset();
       document.getElementById('fame-form-id').value = '';
-      document.getElementById('fame-form-existing-photo').value = '';
-      document.getElementById('fame-photo-status').classList.add('hidden');
       document.getElementById('fame-form-date').value = new Date().toISOString().split('T')[0];
-
       const countrySelect = document.getElementById('fame-form-country');
       countrySelect.innerHTML = '';
       countries.forEach(c => {
@@ -1042,11 +1199,6 @@
         opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
         countrySelect.appendChild(opt);
       });
-
-      if (currentCountry) {
-        countrySelect.value = currentCountry.id;
-      }
-
       document.getElementById('fame-sheet').classList.remove('hidden');
     }
 
@@ -1061,13 +1213,6 @@
       document.getElementById('fame-form-date').value = item.encounter_date || '';
       document.getElementById('fame-form-location').value = item.location || '';
       document.getElementById('fame-form-existing-photo').value = item.photo_url || '';
-      
-      if (item.photo_url) {
-        const photoStatus = document.getElementById('fame-photo-status');
-        photoStatus.innerText = 'Foto bereits vorhanden. Ein neues Auswählen ersetzt es.';
-        photoStatus.classList.remove('hidden');
-      }
-
       document.getElementById('fame-form-rating').value = item.rating || 5;
       document.getElementById('fame-form-notes').value = item.notes || '';
     }
@@ -1078,9 +1223,8 @@
 
     async function saveFameEntry(event) {
       event.preventDefault();
-
       const submitBtn = document.getElementById('fame-submit-btn');
-      submitBtn.innerText = 'Lädt hoch & speichert...';
+      submitBtn.innerText = 'Speichert...';
       submitBtn.disabled = true;
 
       try {
@@ -1088,25 +1232,12 @@
         const fileInput = document.getElementById('fame-form-file');
         let photoUrl = document.getElementById('fame-form-existing-photo').value || null;
 
-        // Wenn ein neues Bild ausgewählt wurde -> Supabase Storage Upload
         if (fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-          const filePath = `${fileName}`;
-
-          const { error: uploadError } = await supabaseClient.storage
-            .from('fame-photos')
-            .upload(filePath, file);
-
-          if (uploadError) {
-            alert('Fehler beim Upload des Fotos: ' + uploadError.message + '\n\nHast du den Bucket "fame-photos" in Supabase angelegt?');
-          } else {
-            const { data: publicUrlData } = supabaseClient.storage
-              .from('fame-photos')
-              .getPublicUrl(filePath);
-            
-            photoUrl = publicUrlData.publicUrl;
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${file.name.split('.').pop()}`;
+          const { error: uploadError } = await supabaseClient.storage.from('fame-photos').upload(fileName, file);
+          if (!uploadError) {
+            photoUrl = supabaseClient.storage.from('fame-photos').getPublicUrl(fileName).data.publicUrl;
           }
         }
 
@@ -1122,20 +1253,13 @@
           notes: document.getElementById('fame-form-notes').value || null
         };
 
-        if (id) {
-          const { error } = await supabaseClient.from('hall_of_fame').update(payload).eq('id', id);
-          if (error) alert('Fehler beim Aktualisieren: ' + error.message);
-        } else {
-          const { error } = await supabaseClient.from('hall_of_fame').insert([payload]);
-          if (error) alert('Fehler beim Erstellen: ' + error.message);
-        }
+        if (id) await supabaseClient.from('hall_of_fame').update(payload).eq('id', id);
+        else await supabaseClient.from('hall_of_fame').insert([payload]);
 
         closeFameSheet();
         await loadHallOfFame();
-      } catch (err) {
-        alert('Unerwarteter Fehler: ' + err.message);
       } finally {
-        submitBtn.innerText = 'Eintrag in Hall of Fame speichern';
+        submitBtn.innerText = 'Speichern';
         submitBtn.disabled = false;
       }
     }
@@ -1144,15 +1268,14 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
-      ['matrix', 'zentrum', 'rechner', 'sprachen', 'safe', 'fame'].forEach(t => {
+      ['matrix', 'zentrum', 'rechner', 'finanzen', 'sprachen', 'fame', 'safe'].forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
-        if (btn) {
-          btn.className = (t === tabName) ? 'flex flex-col items-center gap-1 text-emerald-400' : 'flex flex-col items-center gap-1 text-slate-400';
-        }
+        if (btn) btn.className = (t === tabName) ? 'flex flex-col items-center gap-1 text-emerald-400' : 'flex flex-col items-center gap-1 text-slate-400';
       });
 
       if (tabName === 'rechner') updateCalcCurrencyInfo();
       if (tabName === 'zentrum') initMap();
+      if (tabName === 'finanzen') loadExpenses();
       if (tabName === 'fame') loadHallOfFame();
     }
   </script>
