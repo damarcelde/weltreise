@@ -2,8 +2,9 @@
 <html lang="de" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Weltreise OS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#07110f">
+  <title>Weltreise OS · Travel Command Center</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,40 +22,405 @@
   </script>
   
   <style>
-    body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
-    .bottom-sheet { transition: transform 0.3s ease-in-out; }
-    .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution {
-      filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    :root {
+      --bg-deep: #06100d;
+      --bg-main: #091613;
+      --surface: rgba(17, 29, 25, 0.82);
+      --surface-strong: rgba(22, 37, 32, 0.94);
+      --surface-soft: rgba(255,255,255,0.045);
+      --border: rgba(148, 163, 184, 0.13);
+      --border-strong: rgba(52, 211, 153, 0.20);
+      --text: #f5faf8;
+      --muted: #91a39d;
+      --accent: #34d399;
+      --accent-strong: #10b981;
+      --accent-soft: rgba(52, 211, 153, 0.10);
+      --sand: #f2c98d;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--bg-deep); scroll-behavior: smooth; }
+
+    body {
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(52,211,153,.13), transparent 28rem),
+        radial-gradient(circle at 0% 35%, rgba(45,212,191,.06), transparent 18rem),
+        linear-gradient(180deg, #07110f 0%, #0a1512 40%, #091310 100%);
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.28), transparent 68%);
+      z-index: -1;
+    }
+
+    main {
+      width: 100%;
+      max-width: 46rem !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+      padding-bottom: 7rem !important;
+    }
+
+    .tab-content:not(.hidden) {
+      animation: tabIn .24s ease-out;
+    }
+
+    @keyframes tabIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .app-header {
+      background: rgba(6, 16, 13, 0.78) !important;
+      border-color: rgba(148,163,184,.10) !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      padding-top: max(.65rem, env(safe-area-inset-top)) !important;
+    }
+
+    .app-header-inner {
+      width: 100%;
+      max-width: 46rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+
+    .brand-mark {
+      width: 2.35rem;
+      height: 2.35rem;
+      display: grid;
+      place-items: center;
+      border-radius: .85rem;
+      background:
+        linear-gradient(145deg, rgba(52,211,153,.20), rgba(16,185,129,.05)),
+        rgba(255,255,255,.035);
+      border: 1px solid rgba(52,211,153,.18);
+      box-shadow: inset 0 1px rgba(255,255,255,.06), 0 8px 24px rgba(16,185,129,.10);
+      font-size: 1.1rem;
+    }
+
+    .country-pill {
+      min-width: 0;
+      flex: 1;
+      padding: .55rem .8rem;
+      border: 1px solid rgba(148,163,184,.12);
+      background: rgba(255,255,255,.035);
+      border-radius: 1rem;
+      box-shadow: inset 0 1px rgba(255,255,255,.025);
+    }
+
+    #country-select {
+      width: 100%;
+      min-width: 0;
+      max-width: none !important;
+      font-size: .95rem !important;
+      line-height: 1.1;
+    }
+
+    .header-stat {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      margin-top: .18rem;
+      color: #8bb9aa !important;
+    }
+
+    .header-dot {
+      width: .35rem;
+      height: .35rem;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(52,211,153,.7);
+    }
+
+    .tab-section-title {
+      font-size: .68rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #789188;
+      font-weight: 800;
+    }
+
+    .tab-headline {
+      font-size: 1.55rem !important;
+      line-height: 1.05;
+      letter-spacing: -.04em;
+      color: #f5faf8 !important;
+    }
+
+    .card,
+    .tab-content .bg-slate-800 {
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.012)),
+        var(--surface) !important;
+      border-color: var(--border) !important;
+      box-shadow:
+        0 18px 40px rgba(0,0,0,.16),
+        inset 0 1px rgba(255,255,255,.035) !important;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .tab-content .bg-slate-900,
+    .tab-content .bg-slate-950 {
+      background: rgba(4,12,10,.54) !important;
+    }
+
+    .tab-content .rounded-xl,
+    .tab-content .rounded-2xl {
+      border-radius: 1.1rem !important;
+    }
+
+    .tab-content button.bg-emerald-600,
+    .tab-content button.bg-rose-600,
+    .tab-content button.bg-blue-600,
+    form button[type="submit"] {
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 10px 22px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.14);
+      font-weight: 700;
+      transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+    }
+
+    .tab-content button.bg-emerald-600 {
+      background: linear-gradient(135deg, #10b981, #059669) !important;
+    }
+
+    .tab-content button.bg-rose-600,
+    form button.bg-rose-600 {
+      background: linear-gradient(135deg, #f43f5e, #e11d48) !important;
+    }
+
+    .tab-content button.bg-blue-600,
+    form button.bg-blue-600 {
+      background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(.985);
+    }
+
+    input, select, textarea {
+      color-scheme: dark;
+    }
+
+    input:not([type="checkbox"]):not([type="file"]),
+    select,
+    textarea {
+      border-color: rgba(148,163,184,.12) !important;
+      box-shadow: inset 0 1px rgba(255,255,255,.025);
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    input:not([type="checkbox"]):focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(52,211,153,.55) !important;
+      box-shadow: 0 0 0 3px rgba(52,211,153,.08), inset 0 1px rgba(255,255,255,.025);
+    }
+
+    .modal-overlay {
+      background: rgba(1,7,5,.76) !important;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .bottom-sheet {
+      transition: transform 0.3s ease-in-out;
+      border-top-left-radius: 1.4rem !important;
+      border-top-right-radius: 1.4rem !important;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.01)),
+        #0b1714 !important;
+      box-shadow: 0 -25px 70px rgba(0,0,0,.45);
+      padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    }
+
+    .bottom-sheet::before {
+      content: "";
+      display: block;
+      width: 2.8rem;
+      height: .25rem;
+      border-radius: 99px;
+      background: rgba(148,163,184,.23);
+      margin: -.1rem auto 1rem;
+    }
+
+    nav.app-nav {
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+      width: min(46rem, calc(100% - 1rem));
+      margin: 0;
+      bottom: max(.55rem, env(safe-area-inset-bottom));
+      padding: .45rem !important;
+      gap: .2rem;
+      overflow-x: auto;
+      justify-content: flex-start !important;
+      border: 1px solid rgba(148,163,184,.11) !important;
+      border-radius: 1.35rem !important;
+      background: rgba(5,14,12,.82) !important;
+      box-shadow: 0 18px 45px rgba(0,0,0,.36), inset 0 1px rgba(255,255,255,.04);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      scrollbar-width: none;
+    }
+
+    nav.app-nav::-webkit-scrollbar { display: none; }
+
+    .nav-item {
+      flex: 0 0 auto;
+      min-width: 4.05rem;
+      padding: .52rem .45rem .48rem !important;
+      border-radius: 1rem;
+      color: #73847e !important;
+      transition: all .18s ease;
+      position: relative;
+    }
+
+    .nav-item span:first-child {
+      font-size: 1.1rem !important;
+      filter: saturate(.82);
+      transition: transform .18s ease, filter .18s ease;
+    }
+
+    .nav-item span:last-child {
+      font-size: .58rem !important;
+      letter-spacing: .01em;
+    }
+
+    .nav-item.nav-active {
+      color: #cffff0 !important;
+      background: linear-gradient(145deg, rgba(52,211,153,.17), rgba(52,211,153,.055));
+      border: 1px solid rgba(52,211,153,.16);
+      box-shadow: inset 0 1px rgba(255,255,255,.05), 0 5px 18px rgba(16,185,129,.08);
+    }
+
+    .nav-item.nav-active span:first-child {
+      transform: translateY(-1px) scale(1.05);
+      filter: saturate(1.12);
+    }
+
+    .matrix-toolbar {
+      padding: .95rem 1rem;
+      border: 1px solid rgba(148,163,184,.11);
+      background: linear-gradient(145deg, rgba(52,211,153,.07), rgba(255,255,255,.025));
+      border-radius: 1.1rem;
+      margin-bottom: .75rem !important;
+    }
+
+    .matrix-table-wrap {
+      border-radius: 1.2rem !important;
+      overflow: hidden;
+    }
+
+    #matrix-table-body tr {
+      border-color: rgba(148,163,184,.08) !important;
+    }
+
+    #matrix-table-body tr:hover {
+      background: rgba(52,211,153,.035) !important;
+    }
+
+    #map {
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.035), 0 14px 30px rgba(0,0,0,.16);
+    }
+
+    .leaflet-layer,
+    .leaflet-control-zoom-in,
+    .leaflet-control-zoom-out,
+    .leaflet-control-attribution {
+      filter: invert(100%) hue-rotate(180deg) brightness(88%) contrast(92%);
+    }
+
+    .leaflet-control-zoom a {
+      background: rgba(11,23,20,.9) !important;
+      color: #d7eee6 !important;
+      border-color: rgba(148,163,184,.12) !important;
+    }
+
+    .leaflet-popup-content-wrapper,
+    .leaflet-popup-tip {
+      background: #0c1915;
+      color: #edf8f3;
+      border: 1px solid rgba(148,163,184,.12);
+    }
+
+    .stat-accent {
+      text-shadow: 0 0 22px rgba(52,211,153,.16);
+    }
+
+    .section-divider {
+      border-color: rgba(148,163,184,.09) !important;
+    }
+
+    .faint {
+      color: #70827c !important;
+    }
+
+    @media (min-width: 700px) {
+      main { padding-top: 1.25rem !important; }
+      nav.app-nav { bottom: 1rem; }
     }
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-24 font-sans select-none">
 
   <!-- TOP HEADER -->
-  <header class="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <span id="current-flag" class="text-2xl">🌍</span>
-      <div>
-        <select id="country-select" onchange="changeCountry(this.value)" class="bg-transparent text-lg font-bold text-white focus:outline-none cursor-pointer max-w-[200px]">
-          <option value="">Lade Länder...</option>
-        </select>
-        <p class="text-[10px] text-emerald-400 font-medium tracking-wide uppercase" id="country-stats-header">0 Besuche</p>
+  <header class="app-header sticky top-0 z-30 px-4 py-3">
+    <div class="app-header-inner">
+      <div class="brand-mark" aria-hidden="true">✦</div>
+      <div class="country-pill">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="current-flag" class="text-xl shrink-0">🌍</span>
+          <div class="min-w-0 flex-1">
+            <p class="text-[9px] uppercase tracking-[.18em] font-bold text-slate-500 mb-0.5">Aktuelles Land</p>
+            <select id="country-select" onchange="changeCountry(this.value)" class="bg-transparent text-white font-bold focus:outline-none cursor-pointer">
+              <option value="">Lade Länder...</option>
+            </select>
+            <p class="header-stat text-[10px] font-semibold tracking-wide uppercase" id="country-stats-header">
+              <span class="header-dot"></span><span>0 Besuche</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="hidden sm:block text-right">
+        <p class="text-[9px] uppercase tracking-[.18em] font-bold text-slate-600">Travel OS</p>
+        <p class="text-[10px] text-slate-400">Command Center</p>
       </div>
     </div>
   </header>
 
-  <main class="max-w-md mx-auto p-4 space-y-4">
+  <main class="mx-auto pt-4 space-y-4">
 
     <!-- TAB 1: MATRIX (TABELLENANSICHT) -->
     <section id="tab-matrix" class="tab-content">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="text-sm font-bold text-slate-300">Reise-Erlebnisse & Matrix</h2>
-        <button onclick="openNewEntryModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+      <div class="matrix-toolbar flex justify-between items-center gap-3">
+        <div>
+          <p class="tab-section-title">Reiseplan</p>
+          <h2 class="tab-headline font-extrabold mt-1">Erlebnisse & Matrix</h2>
+          <p class="text-[11px] text-slate-500 mt-1">Alles, was du in diesem Land erleben möchtest.</p>
+        </div>
+        <button onclick="openNewEntryModal()" class="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 rounded-xl font-bold shadow transition">
           + Erlebnis
         </button>
       </div>
 
-      <div class="bg-slate-800 rounded-xl border border-slate-700/60 overflow-hidden shadow-xl">
+      <div class="matrix-table-wrap bg-slate-800 rounded-xl border border-slate-700/60 overflow-hidden shadow-xl">
         <table class="w-full text-left text-xs">
           <thead class="bg-slate-950/60 text-slate-400 uppercase text-[10px] border-b border-slate-700/60">
             <tr>
@@ -709,26 +1075,27 @@
   </div>
 
   <!-- FIXED BOTTOM NAVIGATION BAR -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 max-w-md mx-auto flex justify-around items-center p-2 z-40">
-    <button onclick="switchTab('matrix')" id="nav-matrix" class="flex flex-col items-center gap-1 text-emerald-400">
+  <nav class="app-nav fixed z-40 flex items-center">
+
+    <button onclick="switchTab('matrix')" id="nav-matrix" class="nav-item nav-active flex flex-col items-center gap-1">
       <span class="text-lg">🌍</span><span class="text-[10px] font-medium">Matrix</span>
     </button>
-    <button onclick="switchTab('zentrum')" id="nav-zentrum" class="flex flex-col items-center gap-1 text-slate-400">
+    <button onclick="switchTab('zentrum')" id="nav-zentrum" class="nav-item  flex flex-col items-center gap-1">
       <span class="text-lg">🗺️</span><span class="text-[10px] font-medium">Zentrum</span>
     </button>
-    <button onclick="switchTab('rechner')" id="nav-rechner" class="flex flex-col items-center gap-1 text-slate-400">
+    <button onclick="switchTab('rechner')" id="nav-rechner" class="nav-item  flex flex-col items-center gap-1">
       <span class="text-lg">💱</span><span class="text-[10px] font-medium">Rechner</span>
     </button>
-    <button onclick="switchTab('finanzen')" id="nav-finanzen" class="flex flex-col items-center gap-1 text-slate-400">
+    <button onclick="switchTab('finanzen')" id="nav-finanzen" class="nav-item  flex flex-col items-center gap-1">
       <span class="text-lg">💰</span><span class="text-[10px] font-medium">Finanzen</span>
     </button>
-    <button onclick="switchTab('sprachen')" id="nav-sprachen" class="flex flex-col items-center gap-1 text-slate-400">
+    <button onclick="switchTab('sprachen')" id="nav-sprachen" class="nav-item  flex flex-col items-center gap-1">
       <span class="text-lg">🗣️</span><span class="text-[10px] font-medium">Sprachen</span>
     </button>
-    <button onclick="switchTab('fame')" id="nav-fame" class="flex flex-col items-center gap-1 text-slate-400">
+    <button onclick="switchTab('fame')" id="nav-fame" class="nav-item  flex flex-col items-center gap-1">
       <span class="text-lg">🔥</span><span class="text-[10px] font-medium">Fame</span>
     </button>
-    <button onclick="switchTab('safe')" id="nav-safe" class="flex flex-col items-center gap-1 text-slate-400">
+    <button onclick="switchTab('safe')" id="nav-safe" class="nav-item  flex flex-col items-center gap-1">
       <span class="text-lg">🛡️</span><span class="text-[10px] font-medium">Safe</span>
     </button>
   </nav>
@@ -869,7 +1236,7 @@
       document.getElementById('safe-taboos').innerText = currentCountry.cat4_taboos || 'Keine speziellen Hinweise hinterlegt.';
 
       const countryVisits = allVisits.filter(v => v.country_id === currentCountry.id).length;
-      document.getElementById('country-stats-header').innerText = `${countryVisits} Besuche`;
+      document.getElementById('country-stats-header').innerHTML = `<span class="header-dot"></span><span>${countryVisits} ${countryVisits === 1 ? 'Besuch' : 'Besuche'}</span>`;
 
       await loadCountryInfo();
       updateCalcCurrencyInfo();
@@ -1694,12 +2061,13 @@
 
       ['matrix', 'zentrum', 'rechner', 'finanzen', 'sprachen', 'fame', 'safe'].forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
-        if (btn) btn.className = (t === tabName) ? 'flex flex-col items-center gap-1 text-emerald-400' : 'flex flex-col items-center gap-1 text-slate-400';
+        if (btn) btn.classList.toggle('nav-active', t === tabName);
       });
 
       if (tabName === 'rechner') updateCalcCurrencyInfo();
       if (tabName === 'zentrum') initMap();
       if (tabName === 'finanzen') loadExpenses();
+      if (tabName === 'sprachen') loadVocabulary();
       if (tabName === 'fame') loadHallOfFame();
       if (tabName === 'safe') {
         loadCountryInfo();
