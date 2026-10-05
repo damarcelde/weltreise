@@ -215,7 +215,7 @@
     <!-- TAB 4: SPRACHEN -->
     <section id="tab-sprachen" class="tab-content hidden">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold flex items-center gap-2">🗣️ Vokabel-Trainer</h2>
+        <h2 class="text-lg font-bold flex items-center gap-2">🗣️️ Vokabel-Trainer</h2>
         <button onclick="openNewVocabModal()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium">+ Neu</button>
       </div>
       <div id="vocab-list" class="space-y-2"></div>
@@ -357,7 +357,7 @@
     </div>
   </div>
 
-  <!-- HALL OF FAME MODAL (BOTTOM SHEET) -->
+  <!-- HALL OF FAME MODAL (BOTTOM SHEET MIT DIREKTEM BILD-UPLOAD) -->
   <div id="fame-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
@@ -367,6 +367,7 @@
 
       <form id="fame-form" onsubmit="saveFameEntry(event)" class="space-y-4">
         <input type="hidden" id="fame-form-id">
+        <input type="hidden" id="fame-form-existing-photo">
         
         <div>
           <label class="block text-xs text-slate-400 mb-1">Name / Alias</label>
@@ -405,9 +406,11 @@
           <input type="text" id="fame-form-location" placeholder="z. B. Hotel Atlas, Shinjuku" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
         </div>
 
+        <!-- BILD UPLOAD BEREICH -->
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Bild URL (optional)</label>
-          <input type="url" id="fame-form-photo" placeholder="https://..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
+          <label class="block text-xs text-slate-400 mb-1">Foto hochladen (aus Galerie/Kamera)</label>
+          <input type="file" id="fame-form-file" accept="image/*" class="w-full text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg p-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-rose-600 file:text-white hover:file:bg-rose-500 cursor-pointer">
+          <p id="fame-photo-status" class="text-[10px] text-slate-500 mt-1 italic hidden">Bereits ein Foto vorhanden.</p>
         </div>
 
         <div>
@@ -426,7 +429,7 @@
           <textarea id="fame-form-notes" rows="3" placeholder="Wie habt ihr euch kennengelernt? Besonderheiten..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white"></textarea>
         </div>
 
-        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
+        <button type="submit" id="fame-submit-btn" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
           Eintrag in Hall of Fame speichern
         </button>
       </form>
@@ -802,7 +805,7 @@
       document.getElementById('entry-sheet').classList.add('hidden');
     }
 
-    // SPEICHERN
+    // SPEICHERN MATRIX ENTRY
     async function saveEntry(event) {
       event.preventDefault();
 
@@ -961,7 +964,7 @@
       }
     }
 
-    // --- HALL OF FAME LOGIK ---
+    // --- HALL OF FAME LOGIK & UPLOAD ---
     async function loadHallOfFame() {
       const { data, error } = await supabaseClient.from('hall_of_fame').select('*').order('encounter_date', { ascending: false });
       if (error) {
@@ -1027,6 +1030,8 @@
       document.getElementById('fame-sheet-title').innerText = '🔥 Neuer Hall of Fame Eintrag';
       document.getElementById('fame-form').reset();
       document.getElementById('fame-form-id').value = '';
+      document.getElementById('fame-form-existing-photo').value = '';
+      document.getElementById('fame-photo-status').classList.add('hidden');
       document.getElementById('fame-form-date').value = new Date().toISOString().split('T')[0];
 
       const countrySelect = document.getElementById('fame-form-country');
@@ -1055,7 +1060,14 @@
       document.getElementById('fame-form-nationality').value = item.nationality || '';
       document.getElementById('fame-form-date').value = item.encounter_date || '';
       document.getElementById('fame-form-location').value = item.location || '';
-      document.getElementById('fame-form-photo').value = item.photo_url || '';
+      document.getElementById('fame-form-existing-photo').value = item.photo_url || '';
+      
+      if (item.photo_url) {
+        const photoStatus = document.getElementById('fame-photo-status');
+        photoStatus.innerText = 'Foto bereits vorhanden. Ein neues Auswählen ersetzt es.';
+        photoStatus.classList.remove('hidden');
+      }
+
       document.getElementById('fame-form-rating').value = item.rating || 5;
       document.getElementById('fame-form-notes').value = item.notes || '';
     }
@@ -1067,29 +1079,65 @@
     async function saveFameEntry(event) {
       event.preventDefault();
 
-      const id = document.getElementById('fame-form-id').value;
-      const payload = {
-        name: document.getElementById('fame-form-name').value,
-        country_id: document.getElementById('fame-form-country').value,
-        gender: document.getElementById('fame-form-gender').value,
-        nationality: document.getElementById('fame-form-nationality').value || null,
-        encounter_date: document.getElementById('fame-form-date').value || null,
-        location: document.getElementById('fame-form-location').value || null,
-        photo_url: document.getElementById('fame-form-photo').value || null,
-        rating: parseInt(document.getElementById('fame-form-rating').value) || 5,
-        notes: document.getElementById('fame-form-notes').value || null
-      };
+      const submitBtn = document.getElementById('fame-submit-btn');
+      submitBtn.innerText = 'Lädt hoch & speichert...';
+      submitBtn.disabled = true;
 
-      if (id) {
-        const { error } = await supabaseClient.from('hall_of_fame').update(payload).eq('id', id);
-        if (error) alert('Fehler beim Aktualisieren: ' + error.message);
-      } else {
-        const { error } = await supabaseClient.from('hall_of_fame').insert([payload]);
-        if (error) alert('Fehler beim Erstellen: ' + error.message);
+      try {
+        const id = document.getElementById('fame-form-id').value;
+        const fileInput = document.getElementById('fame-form-file');
+        let photoUrl = document.getElementById('fame-form-existing-photo').value || null;
+
+        // Wenn ein neues Bild ausgewählt wurde -> Supabase Storage Upload
+        if (fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+          const filePath = `${fileName}`;
+
+          const { error: uploadError } = await supabaseClient.storage
+            .from('fame-photos')
+            .upload(filePath, file);
+
+          if (uploadError) {
+            alert('Fehler beim Upload des Fotos: ' + uploadError.message + '\n\nHast du den Bucket "fame-photos" in Supabase angelegt?');
+          } else {
+            const { data: publicUrlData } = supabaseClient.storage
+              .from('fame-photos')
+              .getPublicUrl(filePath);
+            
+            photoUrl = publicUrlData.publicUrl;
+          }
+        }
+
+        const payload = {
+          name: document.getElementById('fame-form-name').value,
+          country_id: document.getElementById('fame-form-country').value,
+          gender: document.getElementById('fame-form-gender').value,
+          nationality: document.getElementById('fame-form-nationality').value || null,
+          encounter_date: document.getElementById('fame-form-date').value || null,
+          location: document.getElementById('fame-form-location').value || null,
+          photo_url: photoUrl,
+          rating: parseInt(document.getElementById('fame-form-rating').value) || 5,
+          notes: document.getElementById('fame-form-notes').value || null
+        };
+
+        if (id) {
+          const { error } = await supabaseClient.from('hall_of_fame').update(payload).eq('id', id);
+          if (error) alert('Fehler beim Aktualisieren: ' + error.message);
+        } else {
+          const { error } = await supabaseClient.from('hall_of_fame').insert([payload]);
+          if (error) alert('Fehler beim Erstellen: ' + error.message);
+        }
+
+        closeFameSheet();
+        await loadHallOfFame();
+      } catch (err) {
+        alert('Unerwarteter Fehler: ' + err.message);
+      } finally {
+        submitBtn.innerText = 'Eintrag in Hall of Fame speichern';
+        submitBtn.disabled = false;
       }
-
-      closeFameSheet();
-      await loadHallOfFame();
     }
 
     function switchTab(tabName) {
