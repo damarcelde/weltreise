@@ -249,9 +249,43 @@
       </div>
     </section>
 
+    <!-- TAB 6: HALL OF FAME -->
+    <section id="tab-fame" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">🔥 Hall of Fame</h2>
+          <p class="text-[10px] text-slate-400">Sexuelle Abenteuer & Bekanntschaften</p>
+        </div>
+        <button onclick="openNewFameModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+          + Neuer Eintrag
+        </button>
+      </div>
+
+      <!-- Fame Statistiken -->
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl flex justify-around text-center">
+        <div>
+          <p class="text-2xl font-extrabold text-rose-400" id="fame-stat-total">0</p>
+          <p class="text-[10px] text-slate-400 uppercase font-semibold">Abenteuer</p>
+        </div>
+        <div class="border-x border-slate-700/60 px-4">
+          <p class="text-2xl font-extrabold text-rose-400" id="fame-stat-countries">0</p>
+          <p class="text-[10px] text-slate-400 uppercase font-semibold">Länder abgehakt</p>
+        </div>
+        <div>
+          <p class="text-2xl font-extrabold text-rose-400" id="fame-stat-target-percent">0%</p>
+          <p class="text-[10px] text-slate-400 uppercase font-semibold">Ziel-Quote</p>
+        </div>
+      </div>
+
+      <!-- Galerie / Liste der Begegnungen -->
+      <div id="fame-cards-container" class="grid grid-cols-2 gap-3">
+        <p class="col-span-2 text-center text-slate-500 py-8 text-xs">Lade Hall of Fame...</p>
+      </div>
+    </section>
+
   </main>
 
-  <!-- BEARBEITEN & EINGABE MODAL (BOTTOM SHEET) -->
+  <!-- BEARBEITEN & EINGABE MODAL MATRIX (BOTTOM SHEET) -->
   <div id="entry-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
@@ -323,6 +357,82 @@
     </div>
   </div>
 
+  <!-- HALL OF FAME MODAL (BOTTOM SHEET) -->
+  <div id="fame-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="fame-sheet-title" class="text-lg font-bold text-slate-100">🔥 Neuer Hall of Fame Eintrag</h3>
+        <button onclick="closeFameSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+
+      <form id="fame-form" onsubmit="saveFameEntry(event)" class="space-y-4">
+        <input type="hidden" id="fame-form-id">
+        
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Name / Alias</label>
+          <input type="text" id="fame-form-name" required placeholder="z. B. Sakura" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Land der Begegnung</label>
+            <select id="fame-form-country" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Geschlecht</label>
+            <select id="fame-form-gender" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="weiblich">♀️ Weiblich</option>
+              <option value="männlich">♂️ Männlich</option>
+              <option value="divers">⚧️ Divers</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Nationalität</label>
+            <input type="text" id="fame-form-nationality" placeholder="z. B. Japanisch" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Datum</label>
+            <input type="date" id="fame-form-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Ort / Hotspot / Love Hotel</label>
+          <input type="text" id="fame-form-location" placeholder="z. B. Hotel Atlas, Shinjuku" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Bild URL (optional)</label>
+          <input type="url" id="fame-form-photo" placeholder="https://..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Bewertung & Chemistry</label>
+          <select id="fame-form-rating" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+            <option value="5">🔥🔥🔥🔥🔥 (Unvergesslich)</option>
+            <option value="4">🔥🔥🔥🔥 (Sehr gut)</option>
+            <option value="3">🔥🔥🔥 (Gut)</option>
+            <option value="2">🔥🔥 (Solide)</option>
+            <option value="1">🔥 (Anekdote)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Details & Erinnerungen</label>
+          <textarea id="fame-form-notes" rows="3" placeholder="Wie habt ihr euch kennengelernt? Besonderheiten..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white"></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
+          Eintrag in Hall of Fame speichern
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- FIXED BOTTOM NAVIGATION BAR -->
   <nav class="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 max-w-md mx-auto flex justify-around items-center p-2 z-40">
     <button onclick="switchTab('matrix')" id="nav-matrix" class="flex flex-col items-center gap-1 text-emerald-400">
@@ -336,6 +446,9 @@
     </button>
     <button onclick="switchTab('sprachen')" id="nav-sprachen" class="flex flex-col items-center gap-1 text-slate-400">
       <span class="text-lg">🗣️</span><span class="text-[10px] font-medium">Sprachen</span>
+    </button>
+    <button onclick="switchTab('fame')" id="nav-fame" class="flex flex-col items-center gap-1 text-slate-400">
+      <span class="text-lg">🔥</span><span class="text-[10px] font-medium">Fame</span>
     </button>
     <button onclick="switchTab('safe')" id="nav-safe" class="flex flex-col items-center gap-1 text-slate-400">
       <span class="text-lg">🛡️</span><span class="text-[10px] font-medium">Safe</span>
@@ -352,6 +465,7 @@
     let currentCountry = null;
     let allEntries = [];
     let allVisits = [];
+    let allFameEntries = [];
     let map = null;
     let mapMarkers = [];
 
@@ -466,7 +580,6 @@
       const countryVisits = allVisits.filter(v => v.country_id === currentCountry.id).length;
       document.getElementById('country-stats-header').innerText = `${countryVisits} Besuche`;
 
-      // Währungsrechner auf neues Land aktualisieren
       updateCalcCurrencyInfo();
 
       renderMatrixTable();
@@ -848,17 +961,151 @@
       }
     }
 
+    // --- HALL OF FAME LOGIK ---
+    async function loadHallOfFame() {
+      const { data, error } = await supabaseClient.from('hall_of_fame').select('*').order('encounter_date', { ascending: false });
+      if (error) {
+        console.warn('Hinweis: hall_of_fame-Tabelle fehlt evtl. noch in Supabase.', error);
+        return;
+      }
+      allFameEntries = data || [];
+      renderHallOfFame();
+    }
+
+    function renderHallOfFame() {
+      const container = document.getElementById('fame-cards-container');
+      container.innerHTML = '';
+
+      const totalEnounters = allFameEntries.length;
+      const uniqueCountries = new Set(allFameEntries.map(e => e.country_id)).size;
+      const targetPercent = countries.length > 0 ? ((uniqueCountries / countries.length) * 100).toFixed(0) : 0;
+
+      document.getElementById('fame-stat-total').innerText = totalEnounters;
+      document.getElementById('fame-stat-countries').innerText = uniqueCountries;
+      document.getElementById('fame-stat-target-percent').innerText = `${targetPercent}%`;
+
+      if (allFameEntries.length === 0) {
+        container.innerHTML = `<p class="col-span-2 text-center text-slate-500 py-10 text-xs italic">Noch keine Einträge in der Hall of Fame. Zeit für das erste Abenteuer! 🔥</p>`;
+        return;
+      }
+
+      allFameEntries.forEach(item => {
+        const country = countries.find(c => c.id === item.country_id) || { flag_emoji: '🌍', name: 'Unbekannt' };
+        const ratingFlames = '🔥'.repeat(item.rating || 5);
+
+        const card = document.createElement('div');
+        card.onclick = () => openEditFameModal(item);
+        card.className = 'bg-slate-800 rounded-xl border border-slate-700/60 overflow-hidden shadow-lg cursor-pointer hover:border-rose-500/50 transition flex flex-col justify-between';
+
+        const imageHeader = item.photo_url 
+          ? `<div class="h-28 w-full bg-cover bg-center" style="background-image: url('${item.photo_url}')"></div>` 
+          : `<div class="h-20 w-full bg-slate-900/60 flex items-center justify-center text-3xl text-slate-700">👤</div>`;
+
+        card.innerHTML = `
+          ${imageHeader}
+          <div class="p-3">
+            <div class="flex justify-between items-start">
+              <h3 class="font-bold text-slate-100 text-sm">${item.name}</h3>
+              <span class="text-xs" title="${country.name}">${country.flag_emoji}</span>
+            </div>
+            <p class="text-[10px] text-rose-400 font-medium mt-0.5">${item.nationality || country.name}</p>
+            <div class="text-[10px] text-slate-400 mt-2 space-y-0.5">
+              ${item.location ? `<div>📍 ${item.location}</div>` : ''}
+              ${item.encounter_date ? `<div>📅 ${item.encounter_date}</div>` : ''}
+            </div>
+            <div class="text-[9px] mt-2 pt-2 border-t border-slate-700/50 flex justify-between items-center">
+              <span>${ratingFlames}</span>
+              <span class="text-slate-500 uppercase text-[8px]">${item.gender || '♀️'}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openNewFameModal() {
+      document.getElementById('fame-sheet-title').innerText = '🔥 Neuer Hall of Fame Eintrag';
+      document.getElementById('fame-form').reset();
+      document.getElementById('fame-form-id').value = '';
+      document.getElementById('fame-form-date').value = new Date().toISOString().split('T')[0];
+
+      const countrySelect = document.getElementById('fame-form-country');
+      countrySelect.innerHTML = '';
+      countries.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
+        countrySelect.appendChild(opt);
+      });
+
+      if (currentCountry) {
+        countrySelect.value = currentCountry.id;
+      }
+
+      document.getElementById('fame-sheet').classList.remove('hidden');
+    }
+
+    function openEditFameModal(item) {
+      openNewFameModal();
+      document.getElementById('fame-sheet-title').innerText = 'Eintrag bearbeiten';
+      document.getElementById('fame-form-id').value = item.id;
+      document.getElementById('fame-form-name').value = item.name;
+      document.getElementById('fame-form-country').value = item.country_id;
+      document.getElementById('fame-form-gender').value = item.gender || 'weiblich';
+      document.getElementById('fame-form-nationality').value = item.nationality || '';
+      document.getElementById('fame-form-date').value = item.encounter_date || '';
+      document.getElementById('fame-form-location').value = item.location || '';
+      document.getElementById('fame-form-photo').value = item.photo_url || '';
+      document.getElementById('fame-form-rating').value = item.rating || 5;
+      document.getElementById('fame-form-notes').value = item.notes || '';
+    }
+
+    function closeFameSheet() {
+      document.getElementById('fame-sheet').classList.add('hidden');
+    }
+
+    async function saveFameEntry(event) {
+      event.preventDefault();
+
+      const id = document.getElementById('fame-form-id').value;
+      const payload = {
+        name: document.getElementById('fame-form-name').value,
+        country_id: document.getElementById('fame-form-country').value,
+        gender: document.getElementById('fame-form-gender').value,
+        nationality: document.getElementById('fame-form-nationality').value || null,
+        encounter_date: document.getElementById('fame-form-date').value || null,
+        location: document.getElementById('fame-form-location').value || null,
+        photo_url: document.getElementById('fame-form-photo').value || null,
+        rating: parseInt(document.getElementById('fame-form-rating').value) || 5,
+        notes: document.getElementById('fame-form-notes').value || null
+      };
+
+      if (id) {
+        const { error } = await supabaseClient.from('hall_of_fame').update(payload).eq('id', id);
+        if (error) alert('Fehler beim Aktualisieren: ' + error.message);
+      } else {
+        const { error } = await supabaseClient.from('hall_of_fame').insert([payload]);
+        if (error) alert('Fehler beim Erstellen: ' + error.message);
+      }
+
+      closeFameSheet();
+      await loadHallOfFame();
+    }
+
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
-      ['matrix', 'zentrum', 'rechner', 'sprachen', 'safe'].forEach(t => {
+      ['matrix', 'zentrum', 'rechner', 'sprachen', 'safe', 'fame'].forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
-        btn.className = (t === tabName) ? 'flex flex-col items-center gap-1 text-emerald-400' : 'flex flex-col items-center gap-1 text-slate-400';
+        if (btn) {
+          btn.className = (t === tabName) ? 'flex flex-col items-center gap-1 text-emerald-400' : 'flex flex-col items-center gap-1 text-slate-400';
+        }
       });
 
       if (tabName === 'rechner') updateCalcCurrencyInfo();
       if (tabName === 'zentrum') initMap();
+      if (tabName === 'fame') loadHallOfFame();
     }
   </script>
 </body>
