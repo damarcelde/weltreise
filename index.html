@@ -2055,16 +2055,23 @@
     await loadInitialData();
   }
 
-  function initMap() {
-    if (!map) {
-      map = L.map('map').setView([20, 100], 2);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-    }
-    const visitCountryIds = new Set(allVisits.map(v => v.country_id));
-    const experiencedCountryIds = new Set(allEntries.filter(e => e.status === 'erlebt').map(e => e.country_id));
-    updateMapMarkers(new Set([...visitCountryIds, ...experiencedCountryIds]));
-    setTimeout(() => map.invalidateSize(), 300);
+function initMap() {
+  if (!map) {
+    map = L.map('map').setView([20, 100], 2);
+
+    // DEUTSCHE KACHELN VON CARTO VOYAGER:
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap, © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
   }
+  
+  const visitCountryIds = new Set(allVisits.map(v => v.country_id));
+  const experiencedCountryIds = new Set(allEntries.filter(e => e.status === 'erlebt').map(e => e.country_id));
+  updateMapMarkers(new Set([...visitCountryIds, ...experiencedCountryIds]));
+  setTimeout(() => map.invalidateSize(), 300);
+}
 
   function updateMapMarkers(visitedCountryIds) {
     if (!map) return;
@@ -2222,13 +2229,17 @@ function updateCountryMap() {
   const mapContainer = document.getElementById('country-map');
   if (!mapContainer || !currentCountry) return;
 
-  // 1. Map einmalig initialisieren
-  if (!countryMap) {
-    countryMap = L.map('country-map').setView([20, 100], 4);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(countryMap);
-  }
+// Map einmalig initialisieren
+if (!countryMap) {
+  countryMap = L.map('country-map').setView([20, 100], 4);
+
+  // DEUTSCHE KACHELN VON CARTO VOYAGER (mit deutscher/englischer Übersetzung):
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap, © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(countryMap);
+}
 
   // 2. Alte Marker entfernen
   countryMarkers.forEach(m => countryMap.removeLayer(m));
