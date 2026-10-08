@@ -2060,11 +2060,10 @@ function initMap() {
     map = L.map('map').setView([20, 100], 2);
 
     // DEUTSCHE KACHELN VON CARTO VOYAGER:
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap, © CARTO',
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap Deutschland',
+  maxZoom: 18
+}).addTo(map);
   }
   
   const visitCountryIds = new Set(allVisits.map(v => v.country_id));
@@ -2234,10 +2233,9 @@ if (!countryMap) {
   countryMap = L.map('country-map').setView([20, 100], 4);
 
   // DEUTSCHE KACHELN VON CARTO VOYAGER (mit deutscher/englischer Übersetzung):
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap, © CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19
+L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap Deutschland',
+  maxZoom: 18
   }).addTo(countryMap);
 }
 
