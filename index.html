@@ -1392,6 +1392,7 @@
     await loadVocabulary();
     renderVisitsList();
     updateClocksAndCountdowns();
+    updateCountryMap();
   }
 
   function renderMatrixTable() {
@@ -2214,13 +2215,14 @@
     document.getElementById('fame-sheet').classList.add('hidden');
   }
 
-    let countryMap = null;
+let countryMap = null;
 let countryMarkers = [];
 
 function updateCountryMap() {
-  if (!currentCountry) return;
+  const mapContainer = document.getElementById('country-map');
+  if (!mapContainer || !currentCountry) return;
 
-  // Map einmalig initialisieren
+  // 1. Map einmalig initialisieren
   if (!countryMap) {
     countryMap = L.map('country-map').setView([20, 100], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -2228,33 +2230,42 @@ function updateCountryMap() {
     }).addTo(countryMap);
   }
 
-  // Alte Marker entfernen
+  // 2. Alte Marker entfernen
   countryMarkers.forEach(m => countryMap.removeLayer(m));
   countryMarkers = [];
 
-  document.getElementById('map-country-name').innerText = currentCountry.name;
+  // Name aktualisieren
+  const nameEl = document.getElementById('map-country-name');
+  if (nameEl) nameEl.innerText = currentCountry.name;
 
-  // Koordinaten des Landes abrufen
+  // 3. Koordinaten des Landes abrufen & Kamera setzen
   const coords = countryCoords[currentCountry.name] || [20, 100];
   countryMap.setView(coords, 5);
 
-  // Erlebnisse des aktuellen Landes mit GPS / Ort filtern
-  const countryEntries = allEntries.filter(e => e.country_id === currentCountry.id && (e.lat && e.lng || e.location));
+  // 4. Erlebnisse / Orte des aktuellen Landes filtern & Marker setzen
+  const countryEntries = allEntries.filter(e => e.country_id === currentCountry.id);
   
-  document.getElementById('map-marker-count').innerText = `${countryEntries.length} Orte`;
+  let validMarkerCount = 0;
 
   countryEntries.forEach(item => {
     const cat = categories.find(c => c.id === item.category_id) || { icon: '📍' };
-    
-    // Falls Breitengrad/Längengrad vorhanden sind, Marker setzen
+
+    // Marker setzen (wenn lat & lng vorhanden)
     if (item.lat && item.lng) {
       const marker = L.marker([item.lat, item.lng]).addTo(countryMap)
         .bindPopup(`<b>${cat.icon} ${item.title}</b><br><span style="font-size:10px;">${item.location || ''}</span>`);
       countryMarkers.push(marker);
+      validMarkerCount++;
     }
   });
 
-  setTimeout(() => countryMap.invalidateSize(), 300);
+  const countEl = document.getElementById('map-marker-count');
+  if (countEl) countEl.innerText = `${validMarkerCount} Orte`;
+
+  // 5. InvalidateSize ausführen, damit Kacheln im Container richtig geladen werden
+  setTimeout(() => {
+    if (countryMap) countryMap.invalidateSize();
+  }, 200);
 }
 
   async function saveFameEntry(event) {
