@@ -10,7 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Leaflet CSS & JS -->
+  <!-- Leaflet CSS & JS für die Weltkarte -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -24,13 +24,22 @@
   <style>
     :root {
       --bg-deep: #06100d;
+      --bg-main: #091613;
       --surface: rgba(17, 29, 25, 0.85);
+      --surface-strong: rgba(22, 37, 32, 0.94);
+      --surface-soft: rgba(255,255,255,0.045);
       --border: rgba(148, 163, 184, 0.13);
+      --border-strong: rgba(52, 211, 153, 0.20);
       --text: #f5faf8;
+      --muted: #91a39d;
       --accent: #34d399;
+      --accent-strong: #10b981;
+      --accent-soft: rgba(52, 211, 153, 0.10);
+      --sand: #f2c98d;
     }
 
     * { box-sizing: border-box; }
+
     html { background: var(--bg-deep); scroll-behavior: smooth; }
 
     body {
@@ -42,106 +51,220 @@
         linear-gradient(180deg, #07110f 0%, #0a1512 40%, #091310 100%);
       color: var(--text);
       letter-spacing: -0.01em;
-      padding-top: max(4.2rem, calc(env(safe-area-inset-top) + 3.6rem));
+      padding-top: max(4.6rem, calc(env(safe-area-inset-top) + 4rem));
       padding-bottom: max(2rem, env(safe-area-inset-bottom));
     }
 
     body::before {
-      content: ""; position: fixed; inset: 0; pointer-events: none;
-      background-image: linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
       background-size: 32px 32px;
       mask-image: linear-gradient(to bottom, rgba(0,0,0,.28), transparent 68%);
       z-index: -1;
     }
 
     main {
-      width: 100%; max-width: 29rem !important; margin: 0 auto;
-      padding-left: 1rem !important; padding-right: 1rem !important;
+      width: 100%;
+      max-width: 29rem !important; /* Optimiert für iPhone 16 Pro Max */
+      margin: 0 auto;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
     }
 
-    .tab-content:not(.hidden) { animation: tabIn .22s ease-out; }
-    @keyframes tabIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .tab-content:not(.hidden) {
+      animation: tabIn .22s ease-out;
+    }
+
+    @keyframes tabIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse-red {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    }
+    .sos-btn { animation: pulse-red 2s infinite; }
 
     .app-header {
       background: rgba(6, 16, 13, 0.88) !important;
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(148,163,184,.12);
-      padding-top: max(.65rem, env(safe-area-inset-top)) !important; padding-bottom: .65rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      padding-top: max(.65rem, env(safe-area-inset-top)) !important;
+      padding-bottom: .65rem;
     }
 
     .brand-mark {
-      width: 2.2rem; height: 2.2rem; display: grid; place-items: center; border-radius: .85rem;
-      background: linear-gradient(145deg, rgba(52,211,153,.20), rgba(16,185,129,.05)), rgba(255,255,255,.035);
-      border: 1px solid rgba(52,211,153,.18); font-size: 1.05rem;
+      width: 2.2rem;
+      height: 2.2rem;
+      display: grid;
+      place-items: center;
+      border-radius: .85rem;
+      background:
+        linear-gradient(145deg, rgba(52,211,153,.20), rgba(16,185,129,.05)),
+        rgba(255,255,255,.035);
+      border: 1px solid rgba(52,211,153,.18);
+      font-size: 1.05rem;
     }
 
     .country-pill {
-      min-width: 0; flex: 1; padding: .45rem .75rem; border: 1px solid rgba(148,163,184,.12);
-      background: rgba(255,255,255,.035); border-radius: .9rem;
+      min-width: 0;
+      flex: 1;
+      padding: .45rem .75rem;
+      border: 1px solid rgba(148,163,184,.12);
+      background: rgba(255,255,255,.035);
+      border-radius: .9rem;
     }
 
-    #country-select { width: 100%; min-width: 0; font-size: .95rem !important; line-height: 1.1; }
+    #country-select {
+      width: 100%;
+      min-width: 0;
+      font-size: .95rem !important;
+      line-height: 1.1;
+    }
 
     #mobile-menu {
       transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-      padding-top: max(1.5rem, env(safe-area-inset-top)); padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+      padding-top: max(1.5rem, env(safe-area-inset-top));
+      padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
     }
 
     .menu-btn-item {
-      display: flex; align-items: center; gap: 0.85rem; width: 100%; padding: 0.8rem 1rem;
-      border-radius: 1rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(148,163,184,0.08);
-      font-size: 0.9rem; font-weight: 600; color: #e2e8f0; transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border-radius: 1rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(148,163,184,0.08);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      transition: all 0.15s ease;
     }
 
     .menu-btn-item.active-menu {
       background: linear-gradient(145deg, rgba(52,211,153,0.2), rgba(16,185,129,0.08));
-      border-color: rgba(52,211,153,0.3); color: #34d399;
+      border-color: rgba(52,211,153,0.3);
+      color: #34d399;
+    }
+
+    .matrix-table-wrap {
+      border-radius: 1.2rem !important;
+      overflow: hidden;
+    }
+
+    #matrix-table-body tr {
+      border-color: rgba(148,163,184,.08) !important;
+    }
+
+    #matrix-table-body tr:hover {
+      background: rgba(52,211,153,.035) !important;
     }
 
     .bottom-sheet {
-      border-top-left-radius: 1.5rem !important; border-top-right-radius: 1.5rem !important;
-      background: #0b1714 !important; padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+      border-top-left-radius: 1.5rem !important;
+      border-top-right-radius: 1.5rem !important;
+      background: #0b1714 !important;
+      padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
       box-shadow: 0 -25px 70px rgba(0,0,0,.5);
     }
 
     .bottom-sheet::before {
-      content: ""; display: block; width: 2.8rem; height: .25rem; border-radius: 99px;
-      background: rgba(148,163,184,.25); margin: -.1rem auto 1rem;
+      content: "";
+      display: block;
+      width: 2.8rem;
+      height: .25rem;
+      border-radius: 99px;
+      background: rgba(148,163,184,.25);
+      margin: -.1rem auto 1rem;
     }
 
-    #map { border-radius: 1rem; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), 0 14px 30px rgba(0,0,0,.2); }
-    .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution {
+    #map {
+      border-radius: 1rem;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), 0 14px 30px rgba(0,0,0,.2);
+    }
+
+    .leaflet-layer,
+    .leaflet-control-zoom-in,
+    .leaflet-control-zoom-out,
+    .leaflet-control-attribution {
       filter: invert(100%) hue-rotate(180deg) brightness(88%) contrast(92%);
     }
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans select-none">
 
-  <!-- TOP HEADER -->
+  <!-- TOP HEADER WITH HAMBURGER BUTTON -->
   <header class="app-header fixed top-0 left-0 right-0 z-40 px-4">
-    <div class="max-w-md mx-auto flex items-center justify-between gap-2.5">
-      <div class="brand-mark shrink-0" aria-hidden="true">✦</div>
-      
-      <div class="country-pill">
-        <div class="flex items-center gap-2 min-w-0">
-          <span id="current-flag" class="text-xl shrink-0">🌍</span>
-          <div class="min-w-0 flex-1">
-            <select id="country-select" onchange="changeCountry(this.value)" class="bg-transparent text-white font-bold focus:outline-none cursor-pointer truncate">
-              <option value="">Lade Länder...</option>
-            </select>
+    <div class="max-w-md mx-auto flex flex-col gap-1.5">
+      <div class="flex items-center justify-between gap-2.5">
+        <!-- 🚨 SOS BUTTON -->
+        <button onclick="openSOS()" aria-label="Notfall" class="sos-btn shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-red-600/20 border border-red-500/50 text-red-500 text-sm font-black active:scale-95 transition">
+          SOS
+        </button>
+        
+        <div class="country-pill flex flex-col justify-center">
+          <div class="flex items-center gap-2 min-w-0">
+            <span id="current-flag" class="text-lg shrink-0">🌍</span>
+            <div class="min-w-0 flex-1">
+              <select id="country-select" onchange="changeCountry(this.value)" class="bg-transparent text-white font-bold text-sm focus:outline-none cursor-pointer truncate w-full">
+                <option value="">Lade Länder...</option>
+              </select>
+            </div>
+          </div>
+          <!-- 🏡 HEADER ZEIT-WIDGET -->
+          <div id="header-time" class="text-[9px] text-slate-400 font-mono font-medium pl-6 truncate mt-0.5">
+            Lade Zeiten...
           </div>
         </div>
-      </div>
 
-      <button onclick="toggleMobileMenu()" aria-label="Menü öffnen" class="shrink-0 p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-slate-200 active:scale-95 transition">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
+        <!-- HAMBURGER BUTTON -->
+        <button onclick="toggleMobileMenu()" aria-label="Menü öffnen" class="shrink-0 p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-slate-200 active:scale-95 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- SLIDE-OVER MENU -->
+  <!-- 🚨 FULLSCREEN SOS SHEET -->
+  <div id="sos-sheet" class="fixed inset-0 bg-red-950/95 backdrop-blur-xl z-[100] hidden flex-col items-center justify-center p-6 text-center">
+    <div class="absolute top-12 right-6">
+      <button onclick="closeSOS()" class="text-red-300 bg-red-900/50 p-3 rounded-full text-xl font-bold">&times;</button>
+    </div>
+    
+    <div class="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center text-4xl shadow-[0_0_50px_rgba(220,38,38,0.6)] mb-6 animate-pulse">🚨</div>
+    
+    <h1 class="text-4xl font-black text-white mb-2">NOTFALL</h1>
+    <!-- Lokales Hilfe-Wort -->
+    <p id="sos-help-text" class="text-2xl font-bold text-red-400 mb-8 tracking-wide">HELP ME</p>
+    
+    <div class="w-full max-w-sm space-y-4">
+      <div class="bg-red-900/40 border border-red-500/30 p-5 rounded-2xl">
+        <p class="text-xs uppercase text-red-300 font-bold mb-1">Lokaler Notruf (Polizei/Ambulanz)</p>
+        <a id="sos-local-link" href="#" class="text-3xl font-mono font-black text-white block">112</a>
+      </div>
+      
+      <div class="bg-slate-900/60 border border-slate-700/50 p-5 rounded-2xl">
+        <p class="text-xs uppercase text-slate-400 font-bold mb-1">Deutsche Botschaft / Konsulat</p>
+        <a id="sos-embassy-link" href="#" class="text-xl font-mono font-bold text-slate-200 block">+49 000 000</a>
+      </div>
+    </div>
+    
+    <p class="text-xs text-red-400/60 mt-10">Zeige diesen Bildschirm an Passanten für Hilfe.</p>
+  </div>
+
+  <!-- SLIDE-OVER HAMBURGER MENU -->
   <div id="menu-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 hidden transition-opacity"></div>
   
   <aside id="mobile-menu" class="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-slate-900 border-l border-slate-700/80 z-50 transform translate-x-full flex flex-col justify-between p-5 overflow-y-auto shadow-2xl">
@@ -155,19 +278,42 @@
       </div>
 
       <nav class="space-y-1.5">
-        <button onclick="switchTab('matrix')" id="m-nav-matrix" class="menu-btn-item active-menu"><span class="text-xl">🌍</span> <span>Erlebnisse & Matrix</span></button>
-        <button onclick="switchTab('transport')" id="m-nav-transport" class="menu-btn-item"><span class="text-xl">✈️</span> <span>a) Transport & Flüge</span></button>
-        <button onclick="switchTab('packliste')" id="m-nav-packliste" class="menu-btn-item"><span class="text-xl">🎒</span> <span>b) Packliste & Equipment</span></button>
-        <button onclick="switchTab('laenderinfo')" id="m-nav-laenderinfo" class="menu-btn-item"><span class="text-xl">📌</span> <span>c) Länderinfos & Kultur</span></button>
-        <button onclick="switchTab('dokumente')" id="m-nav-dokumente" class="menu-btn-item"><span class="text-xl">🔒</span> <span>d) Dokumente & Vault</span></button>
+        <button onclick="switchTab('matrix')" id="m-nav-matrix" class="menu-btn-item active-menu">
+          <span class="text-xl">🌍</span> <span>Erlebnisse & Matrix</span>
+        </button>
+        <button onclick="switchTab('transport')" id="m-nav-transport" class="menu-btn-item">
+          <span class="text-xl">✈️</span> <span>a) Transport & Flüge</span>
+        </button>
+        <button onclick="switchTab('packliste')" id="m-nav-packliste" class="menu-btn-item">
+          <span class="text-xl">🎒</span> <span>b) Packliste & Equipment</span>
+        </button>
+        <button onclick="switchTab('laenderinfo')" id="m-nav-laenderinfo" class="menu-btn-item">
+          <span class="text-xl">📌</span> <span>c) Länderinfos & Kultur</span>
+        </button>
+        <button onclick="switchTab('dokumente')" id="m-nav-dokumente" class="menu-btn-item">
+          <span class="text-xl">🔒</span> <span>d) Dokumente & Vault</span>
+        </button>
+        <button onclick="switchTab('gesundheit')" id="m-nav-gesundheit" class="menu-btn-item">
+          <span class="text-xl">🏥</span> <span>e) Gesundheit & Apotheke</span>
+        </button>
         
         <div class="pt-2 border-t border-slate-800/80 my-2"></div>
         
-        <button onclick="switchTab('zentrum')" id="m-nav-zentrum" class="menu-btn-item"><span class="text-xl">🗺️</span> <span>Reisezentrum & Karte</span></button>
-        <button onclick="switchTab('rechner')" id="m-nav-rechner" class="menu-btn-item"><span class="text-xl">💱</span> <span>Währungsrechner</span></button>
-        <button onclick="switchTab('finanzen')" id="m-nav-finanzen" class="menu-btn-item"><span class="text-xl">💰</span> <span>Finanz-Tracker</span></button>
-        <button onclick="switchTab('sprachen')" id="m-nav-sprachen" class="menu-btn-item"><span class="text-xl">🗣️</span> <span>Sprachen / Vokabeln</span></button>
-        <button onclick="switchTab('fame')" id="m-nav-fame" class="menu-btn-item"><span class="text-xl">🔥</span> <span>Hall of Fame</span></button>
+        <button onclick="switchTab('zentrum')" id="m-nav-zentrum" class="menu-btn-item">
+          <span class="text-xl">🗺️</span> <span>Reisezentrum & Karte</span>
+        </button>
+        <button onclick="switchTab('rechner')" id="m-nav-rechner" class="menu-btn-item">
+          <span class="text-xl">💱</span> <span>Währungsrechner</span>
+        </button>
+        <button onclick="switchTab('finanzen')" id="m-nav-finanzen" class="menu-btn-item">
+          <span class="text-xl">💰</span> <span>Finanz-Tracker</span>
+        </button>
+        <button onclick="switchTab('sprachen')" id="m-nav-sprachen" class="menu-btn-item">
+          <span class="text-xl">🗣️</span> <span>Sprachen / Vokabeln</span>
+        </button>
+        <button onclick="switchTab('fame')" id="m-nav-fame" class="menu-btn-item">
+          <span class="text-xl">🔥</span> <span>Hall of Fame</span>
+        </button>
       </nav>
     </div>
 
@@ -179,30 +325,67 @@
   <!-- MAIN CONTAINER -->
   <main class="space-y-4">
 
-    <!-- TAB: MATRIX -->
+    <!-- TAB: ERLEBNISSE & MATRIX -->
     <section id="tab-matrix" class="tab-content">
       <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 mb-3 shadow-lg">
         <div>
           <p class="text-[10px] uppercase font-extrabold text-slate-400 tracking-wider">Reiseplan</p>
           <h2 class="text-lg font-black text-slate-100">Erlebnisse & Matrix</h2>
         </div>
-        <button onclick="openNewEntryModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 rounded-xl font-bold shadow transition active:scale-95">+ Erlebnis</button>
+        <button onclick="openNewEntryModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 rounded-xl font-bold shadow transition active:scale-95">
+          + Erlebnis
+        </button>
       </div>
 
-      <div class="bg-slate-800 rounded-xl border border-slate-700/60 overflow-hidden shadow-xl">
+      <div class="matrix-table-wrap bg-slate-800 rounded-xl border border-slate-700/60 overflow-hidden shadow-xl">
         <table class="w-full text-left text-xs">
           <thead class="bg-slate-950/80 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-700/60">
-            <tr><th class="p-3 w-8 text-center">Kat</th><th class="p-3">Erlebnis & Ort</th><th class="p-3 text-right w-20">Status</th></tr>
+            <tr>
+              <th class="p-3 w-8 text-center">Kat</th>
+              <th class="p-3">Erlebnis & Ort</th>
+              <th class="p-3 text-right w-20">Status</th>
+            </tr>
           </thead>
           <tbody id="matrix-table-body" class="divide-y divide-slate-700/40">
-            <tr><td colspan="3" class="text-center text-slate-500 py-8">Lade Erlebnisse...</td></tr>
+            <tr>
+              <td colspan="3" class="text-center text-slate-500 py-8">Lade Erlebnisse...</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- TAB A: TRANSPORT -->
+    <!-- TAB A: TRANSPORT & FLÜGE -->
     <section id="tab-transport" class="tab-content hidden space-y-3">
+      
+      <!-- 🎫 LIVE BOARDING WIDGET -->
+      <div id="boarding-widget-container" class="hidden">
+        <div class="bg-gradient-to-br from-blue-900 to-slate-900 border border-blue-500/30 rounded-2xl p-4 shadow-[0_10px_30px_rgba(37,99,235,0.15)] relative overflow-hidden">
+          <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl"></div>
+          
+          <div class="flex justify-between items-start border-b border-blue-500/20 pb-3 mb-3">
+            <div>
+              <p class="text-[9px] uppercase text-blue-400 font-bold tracking-wider mb-1">Nächste Abreise</p>
+              <h3 class="text-base font-black text-white flex items-center gap-2" id="bw-route">NRT ➔ BKK</h3>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] text-slate-300" id="bw-date">24. Okt 2026</p>
+              <p class="text-sm font-mono font-bold text-blue-300" id="boarding-countdown">Lade...</p>
+            </div>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-[9px] uppercase text-slate-400">Buchungscode (PNR)</p>
+              <p class="font-mono text-lg font-bold text-white tracking-widest mt-0.5" id="bw-pnr">X7Y8Z9</p>
+            </div>
+            <button onclick="copyPNR()" class="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 text-[10px] font-bold px-3 py-1.5 rounded-lg transition">
+              Kopieren 📋
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg">
         <div>
           <h2 class="text-base font-bold text-blue-400 flex items-center gap-2">✈️ Transport & Flug-Hub</h2>
@@ -210,10 +393,12 @@
         </div>
         <button onclick="openNewTransportModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-2 rounded-xl font-bold shadow transition active:scale-95">+ Fahrt</button>
       </div>
-      <div id="transport-list" class="space-y-2"><p class="text-xs text-slate-500 italic text-center py-4">Lade Transporte...</p></div>
+      <div id="transport-list" class="space-y-2">
+        <p class="text-xs text-slate-500 italic text-center py-4">Lade Transporte...</p>
+      </div>
     </section>
 
-    <!-- TAB B: PACKLISTE -->
+    <!-- TAB B: PACKLISTE & EQUIPMENT -->
     <section id="tab-packliste" class="tab-content hidden space-y-3">
       <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg">
         <div>
@@ -222,16 +407,23 @@
         </div>
         <button onclick="openNewEquipmentModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-xl font-bold shadow transition active:scale-95">+ Item</button>
       </div>
-      <div id="equipment-list" class="space-y-2"><p class="text-xs text-slate-500 italic text-center py-4">Lade Ausrüstung...</p></div>
+      <div id="equipment-list" class="space-y-2">
+        <p class="text-xs text-slate-500 italic text-center py-4">Lade Ausrüstung...</p>
+      </div>
     </section>
 
-    <!-- TAB C: LÄNDERINFOS -->
+    <!-- TAB C: LÄNDERINFOS & KULTUR -->
     <section id="tab-laenderinfo" class="tab-content hidden space-y-3">
       <div class="bg-slate-800/90 border border-emerald-500/40 rounded-2xl p-4 shadow-xl space-y-4">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-          <h3 class="text-base font-extrabold text-emerald-400 flex items-center gap-2" id="info-card-country-name">📌 Lade Länderdaten...</h3>
+          <h3 class="text-base font-extrabold text-emerald-400 flex items-center gap-2" id="info-card-country-name">
+            📌 Lade Länderdaten...
+          </h3>
           <span class="text-xs font-mono font-bold text-slate-300" id="info-card-capital-pop"></span>
         </div>
+
+        <!-- 🛂 VISA TRACKER -->
+        <div id="visa-tracker-container"></div>
 
         <div class="grid grid-cols-2 gap-2 text-xs">
           <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50">
@@ -273,16 +465,79 @@
         </div>
         <button onclick="openNewDocModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-2 rounded-xl font-bold shadow transition active:scale-95">+ Dok</button>
       </div>
-      <div id="vault-docs-list" class="space-y-2"><p class="text-xs text-slate-500 italic text-center py-4">Lade Dokumente...</p></div>
+      <div id="vault-docs-list" class="space-y-2">
+        <p class="text-xs text-slate-500 italic text-center py-4">Lade Dokumente...</p>
+      </div>
+    </section>
+
+    <!-- 🏥 TAB E: GESUNDHEIT & APOTHEKE -->
+    <section id="tab-gesundheit" class="tab-content hidden space-y-3">
+      
+      <!-- Notfallpass -->
+      <div class="bg-red-950/30 border border-red-500/30 rounded-2xl p-4 shadow-xl">
+        <h2 class="text-sm font-bold text-red-400 flex items-center gap-2 mb-3">🪪 Medizinischer Notfallpass</h2>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
+            <span class="text-[9px] text-slate-400 block uppercase">Blutgruppe</span>
+            <span class="font-bold text-white text-sm">O Positiv (O+)</span>
+          </div>
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
+            <span class="text-[9px] text-slate-400 block uppercase">Allergien</span>
+            <span class="font-bold text-emerald-400">Keine bekannt</span>
+          </div>
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 col-span-2 flex justify-between items-center">
+            <div>
+              <span class="text-[9px] text-slate-400 block uppercase">Reisekrankenversicherung</span>
+              <span class="font-bold text-white">HanseMerkur - Police: 123456</span>
+            </div>
+            <span class="text-xl">🛡️</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reiseapotheke Tracker -->
+      <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg mt-4">
+        <div>
+          <h2 class="text-base font-bold text-cyan-400 flex items-center gap-2">💊 Reiseapotheke</h2>
+          <p class="text-[10px] text-slate-400">Bestand & Ablauffristen</p>
+        </div>
+        <button onclick="openNewMedModal()" class="bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-3 py-2 rounded-xl font-bold shadow transition active:scale-95">+ Med</button>
+      </div>
+      
+      <div id="med-list" class="space-y-2">
+        <!-- Rendered via JS -->
+      </div>
     </section>
 
     <!-- TAB: REISEZENTRUM -->
     <section id="tab-zentrum" class="tab-content hidden space-y-4">
+      
+      <!-- 🏡 HOME SWEET HOME WIDGET -->
+      <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-4 border border-slate-700/60 shadow-xl flex items-center justify-between">
+        <div>
+          <p class="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-1">🏡 Zeit in der Heimat (DE)</p>
+          <p class="text-2xl font-mono font-black text-white" id="home-time-large">--:--</p>
+        </div>
+        <div class="text-right flex flex-col items-end">
+          <div id="home-call-indicator" class="px-2 py-1 rounded-md text-[10px] font-bold border mb-1">Lade...</div>
+          <p class="text-[10px] text-slate-400">Lokalzeit: <span id="local-time-large" class="text-emerald-400 font-mono font-bold">--:--</span></p>
+        </div>
+      </div>
+
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-4">
         <div class="flex justify-around text-center">
-          <div><p class="text-2xl font-extrabold text-emerald-400" id="stat-world">0%</p><p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Welt entdeckt</p></div>
-          <div class="border-x border-slate-700/60 px-4"><p class="text-2xl font-extrabold text-emerald-400" id="stat-visited-countries">0</p><p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Länder bereist</p></div>
-          <div><p class="text-2xl font-extrabold text-emerald-400" id="stat-days-abroad">0</p><p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tage auf Reise</p></div>
+          <div>
+            <p class="text-2xl font-extrabold text-emerald-400" id="stat-world">0%</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Welt entdeckt</p>
+          </div>
+          <div class="border-x border-slate-700/60 px-4">
+            <p class="text-2xl font-extrabold text-emerald-400" id="stat-visited-countries">0</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Länder bereist</p>
+          </div>
+          <div>
+            <p class="text-2xl font-extrabold text-emerald-400" id="stat-days-abroad">0</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tage auf Reise</p>
+          </div>
         </div>
 
         <div class="pt-2 border-t border-slate-700/50">
@@ -323,7 +578,9 @@
           <h2 class="text-sm font-bold flex items-center gap-2">📅 Besuchshistorie</h2>
           <button onclick="addVisitPrompt()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium shadow">+ Besuch</button>
         </div>
-        <div id="visits-list" class="space-y-2"><p class="text-xs text-slate-500 italic">Keine Besuche eingetragen.</p></div>
+        <div id="visits-list" class="space-y-2">
+          <p class="text-xs text-slate-500 italic">Keine Besuche eingetragen.</p>
+        </div>
       </div>
     </section>
 
@@ -399,7 +656,9 @@
           <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">💰 Finanz-Tracker</h2>
           <p class="text-[10px] text-slate-400">Ausgaben, Fixkosten & Monatsstatistik</p>
         </div>
-        <button onclick="openNewExpenseModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">+ Ausgabe</button>
+        <button onclick="openNewExpenseModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+          + Ausgabe
+        </button>
       </div>
 
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
@@ -409,15 +668,26 @@
         </div>
 
         <div class="grid grid-cols-3 gap-2 text-center pt-1">
-          <div><p class="text-xs text-slate-400 uppercase font-semibold">Gesamt</p><p class="text-lg font-mono font-extrabold text-white mt-0.5" id="exp-stat-total">0,00 €</p></div>
-          <div class="border-x border-slate-700/60 px-1"><p class="text-xs text-slate-400 uppercase font-semibold">Fixkosten</p><p class="text-lg font-mono font-extrabold text-rose-400 mt-0.5" id="exp-stat-fixed">0,00 €</p></div>
-          <div><p class="text-xs text-slate-400 uppercase font-semibold">Variabel</p><p class="text-lg font-mono font-extrabold text-emerald-400 mt-0.5" id="exp-stat-variable">0,00 €</p></div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-semibold">Gesamt</p>
+            <p class="text-lg font-mono font-extrabold text-white mt-0.5" id="exp-stat-total">0,00 €</p>
+          </div>
+          <div class="border-x border-slate-700/60 px-1">
+            <p class="text-xs text-slate-400 uppercase font-semibold">Fixkosten</p>
+            <p class="text-lg font-mono font-extrabold text-rose-400 mt-0.5" id="exp-stat-fixed">0,00 €</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-semibold">Variabel</p>
+            <p class="text-lg font-mono font-extrabold text-emerald-400 mt-0.5" id="exp-stat-variable">0,00 €</p>
+          </div>
         </div>
       </div>
 
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
         <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Kategorien-Aufschlüsselung</h3>
-        <div id="expense-category-bars" class="space-y-2.5"><p class="text-xs text-slate-500 italic text-center">Lade Statistiken...</p></div>
+        <div id="expense-category-bars" class="space-y-2.5">
+          <p class="text-xs text-slate-500 italic text-center">Lade Statistiken...</p>
+        </div>
       </div>
 
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
@@ -425,7 +695,9 @@
           <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Buchungen im Monat</h3>
           <span class="text-[10px] text-slate-500" id="exp-count-label">0 Posten</span>
         </div>
-        <div id="expense-list-container" class="space-y-2 divide-y divide-slate-700/40"><p class="text-xs text-slate-500 italic text-center py-4">Keine Ausgaben in diesem Monat.</p></div>
+        <div id="expense-list-container" class="space-y-2 divide-y divide-slate-700/40">
+          <p class="text-xs text-slate-500 italic text-center py-4">Keine Ausgaben in diesem Monat.</p>
+        </div>
       </div>
     </section>
 
@@ -436,196 +708,601 @@
           <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">🔥 Hall of Fame</h2>
           <p class="text-[10px] text-slate-400">Bekanntschaften & Erinnerungen</p>
         </div>
-        <button onclick="openNewFameModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">+ Neuer Eintrag</button>
+        <button onclick="openNewFameModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+          + Neuer Eintrag
+        </button>
       </div>
 
       <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl flex justify-around text-center">
-        <div><p class="text-2xl font-extrabold text-rose-400" id="fame-stat-total">0</p><p class="text-[10px] text-slate-400 uppercase font-semibold">Einträge</p></div>
-        <div class="border-x border-slate-700/60 px-4"><p class="text-2xl font-extrabold text-rose-400" id="fame-stat-countries">0</p><p class="text-[10px] text-slate-400 uppercase font-semibold">Länder</p></div>
-        <div><p class="text-2xl font-extrabold text-rose-400" id="fame-stat-target-percent">0%</p><p class="text-[10px] text-slate-400 uppercase font-semibold">Quote</p></div>
+        <div>
+          <p class="text-2xl font-extrabold text-rose-400" id="fame-stat-total">0</p>
+          <p class="text-[10px] text-slate-400 uppercase font-semibold">Einträge</p>
+        </div>
+        <div class="border-x border-slate-700/60 px-4">
+          <p class="text-2xl font-extrabold text-rose-400" id="fame-stat-countries">0</p>
+          <p class="text-[10px] text-slate-400 uppercase font-semibold">Länder</p>
+        </div>
+        <div>
+          <p class="text-2xl font-extrabold text-rose-400" id="fame-stat-target-percent">0%</p>
+          <p class="text-[10px] text-slate-400 uppercase font-semibold">Quote</p>
+        </div>
       </div>
 
-      <div id="fame-cards-container" class="grid grid-cols-2 gap-3"><p class="col-span-2 text-center text-slate-500 py-8 text-xs">Lade Hall of Fame...</p></div>
+      <div id="fame-cards-container" class="grid grid-cols-2 gap-3">
+        <p class="col-span-2 text-center text-slate-500 py-8 text-xs">Lade Hall of Fame...</p>
+      </div>
     </section>
 
   </main>
 
-  <!-- MODALS & SHEETS -->
+  <!-- MODALS & BOTTOM SHEETS -->
+  
+  <!-- MODAL FÜR AUSGABEN -->
   <div id="expense-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
         <h3 id="expense-sheet-title" class="text-lg font-bold text-slate-100">💰 Neue Ausgabe erfassen</h3>
-        <button onclick="toggleModal('expense-sheet', false)" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+        <button onclick="closeExpenseSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
       </div>
+
       <form id="expense-form" onsubmit="saveExpenseEntry(event)" class="space-y-4">
         <input type="hidden" id="exp-form-id">
-        <div><label class="block text-xs text-slate-400 mb-1">Titel / Bezeichnung</label><input type="text" id="exp-form-title" required placeholder="z. B. Hotel Tokio, Flug" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none text-white"></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs text-slate-400 mb-1">Betrag in Euro (€)</label><input type="number" step="0.01" id="exp-form-amount" required placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono font-bold text-emerald-400 focus:border-emerald-500 focus:outline-none"></div>
-          <div><label class="block text-xs text-slate-400 mb-1">Kosten-Art</label><select id="exp-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="variable">💸 Variable Kosten</option><option value="fixed">📌 Fixkosten</option></select></div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Titel / Bezeichnung</label>
+          <input type="text" id="exp-form-title" required placeholder="z. B. Hotel Tokio, Flug" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none text-white">
         </div>
+
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs text-slate-400 mb-1">Kategorie</label><select id="exp-form-category" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="Unterkunft">🏠 Unterkunft</option><option value="Verpflegung">🍜 Verpflegung / Food</option><option value="Transport">✈️ Transport & Flüge</option><option value="Aktivitäten">🎟️ Aktivitäten & Ausflüge</option><option value="Versicherung">🚨 Versicherung</option><option value="SIM/Tech">📱 SIM / Tech / Abos</option><option value="Sonstiges">📦 Sonstiges</option></select></div>
-          <div><label class="block text-xs text-slate-400 mb-1">Datum</label><input type="date" id="exp-form-date" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Betrag in Euro (€)</label>
+            <input type="number" step="0.01" id="exp-form-amount" required placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono font-bold text-emerald-400 focus:border-emerald-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Kosten-Art</label>
+            <select id="exp-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="variable">💸 Variable Kosten</option>
+              <option value="fixed">📌 Fixkosten</option>
+            </select>
+          </div>
         </div>
-        <div><label class="block text-xs text-slate-400 mb-1">Zuordnung Land (Optional)</label><select id="exp-form-country" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="">-- Keinem Land zugeordnet --</option></select></div>
-        <div><label class="block text-xs text-slate-400 mb-1">Notizen (Optional)</label><input type="text" id="exp-form-notes" placeholder="z. B. In Landeswährung gezahlt" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none text-white"></div>
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Ausgabe speichern</button>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
+            <select id="exp-form-category" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Unterkunft">🏠 Unterkunft</option>
+              <option value="Verpflegung">🍜 Verpflegung / Food</option>
+              <option value="Transport">✈️ Transport & Flüge</option>
+              <option value="Aktivitäten">🎟️ Aktivitäten & Ausflüge</option>
+              <option value="Versicherung">🚨 Versicherung</option>
+              <option value="SIM/Tech">📱 SIM / Tech / Abos</option>
+              <option value="Sonstiges">📦 Sonstiges</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Datum</label>
+            <input type="date" id="exp-form-date" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Zuordnung Land (Optional)</label>
+          <select id="exp-form-country" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+            <option value="">-- Keinem Land zugeordnet --</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Notizen (Optional)</label>
+          <input type="text" id="exp-form-notes" placeholder="z. B. In Landeswährung gezahlt" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none text-white">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
+          Ausgabe speichern
+        </button>
       </form>
     </div>
   </div>
 
+  <!-- BEARBEITEN & EINGABE MODAL MATRIX -->
   <div id="entry-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
         <h3 id="sheet-title" class="text-lg font-bold text-slate-100">Erlebnis bearbeiten</h3>
-        <button onclick="toggleModal('entry-sheet', false)" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+        <button onclick="closeEntrySheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
       </div>
+
       <form id="entry-form" onsubmit="saveEntry(event)" class="space-y-4">
         <input type="hidden" id="form-entry-id">
-        <div><label class="block text-xs text-slate-400 mb-1">Land auswählen</label><select id="form-country-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></select></div>
-        <div><label class="block text-xs text-slate-400 mb-1">Kategorie</label><select id="form-category-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></select></div>
-        <div><label class="block text-xs text-slate-400 mb-1">Titel / Erlebnis</label><textarea id="form-title" rows="2" required placeholder="Titel des Erlebnisses..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none resize-none"></textarea></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs text-slate-400 mb-1">Status</label><select id="form-status" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="erlebt">✅ Erlebt</option><option value="in_planung">⏳ In Planung</option><option value="offen">⭕ Offen</option></select></div>
-          <div><label class="block text-xs text-slate-400 mb-1">Bewertung</label><select id="form-rating" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="0">- Keine -</option><option value="5">⭐⭐⭐⭐⭐</option><option value="4">⭐⭐⭐⭐</option><option value="3">⭐⭐⭐</option><option value="2">⭐⭐</option><option value="1">⭐</option></select></div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Land auswählen</label>
+          <select id="form-country-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></select>
         </div>
-        <div><input type="text" id="form-location" placeholder="z. B. Shibuya, Tokio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></div>
-        <div><textarea id="form-notes" rows="3" placeholder="Besondere Erinnerungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea></div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
+          <select id="form-category-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"></select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Titel / Erlebnis</label>
+          <textarea id="form-title" rows="2" required placeholder="Titel des Erlebnisses..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none resize-none"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Status</label>
+            <select id="form-status" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="erlebt">✅ Erlebt</option>
+              <option value="in_planung">⏳ In Planung</option>
+              <option value="offen">⭕ Offen</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Bewertung</label>
+            <select id="form-rating" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="0">- Keine -</option>
+              <option value="5">⭐⭐⭐⭐⭐</option>
+              <option value="4">⭐⭐⭐⭐</option>
+              <option value="3">⭐⭐⭐</option>
+              <option value="2">⭐⭐</option>
+              <option value="1">⭐</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <input type="text" id="form-location" placeholder="z. B. Shibuya, Tokio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
+        </div>
+        <div>
+          <textarea id="form-notes" rows="3" placeholder="Besondere Erinnerungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"></textarea>
+        </div>
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
       </form>
     </div>
   </div>
 
+  <!-- HALL OF FAME MODAL -->
   <div id="fame-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
         <h3 id="fame-sheet-title" class="text-lg font-bold text-slate-100">🔥 Neuer Hall of Fame Eintrag</h3>
-        <button onclick="toggleModal('fame-sheet', false)" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+        <button onclick="closeFameSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
       </div>
+
       <form id="fame-form" onsubmit="saveFameEntry(event)" class="space-y-4">
         <input type="hidden" id="fame-form-id">
         <input type="hidden" id="fame-form-existing-photo">
-        <div><label class="block text-xs text-slate-400 mb-1">Name / Alias</label><input type="text" id="fame-form-name" required placeholder="z. B. Sakura" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white"></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs text-slate-400 mb-1">Land der Begegnung</label><select id="fame-form-country" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></select></div>
-          <div><label class="block text-xs text-slate-400 mb-1">Geschlecht</label><select id="fame-form-gender" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="weiblich">♀️ Weiblich</option><option value="männlich">♂️ Männlich</option><option value="divers">⚧️ Divers</option></select></div>
+        
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Name / Alias</label>
+          <input type="text" id="fame-form-name" required placeholder="z. B. Sakura" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
         </div>
+
         <div class="grid grid-cols-2 gap-3">
-          <div><input type="text" id="fame-form-nationality" placeholder="z. B. Japanisch" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white"></div>
-          <div><input type="date" id="fame-form-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Land der Begegnung</label>
+            <select id="fame-form-country" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Geschlecht</label>
+            <select id="fame-form-gender" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="weiblich">♀️ Weiblich</option>
+              <option value="männlich">♂️ Männlich</option>
+              <option value="divers">⚧️ Divers</option>
+            </select>
+          </div>
         </div>
-        <div><input type="text" id="fame-form-location" placeholder="z. B. Hotel Atlas, Shinjuku" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white"></div>
-        <div><input type="file" id="fame-form-file" accept="image/*" class="w-full text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg p-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-rose-600 file:text-white hover:file:bg-rose-500 cursor-pointer"></div>
-        <div><select id="fame-form-rating" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="5">🔥🔥🔥🔥🔥 (Unvergesslich)</option><option value="4">🔥🔥🔥🔥 (Sehr gut)</option><option value="3">🔥🔥🔥 (Gut)</option><option value="2">🔥🔥 (Solide)</option><option value="1">🔥 (Anekdote)</option></select></div>
-        <div><textarea id="fame-form-notes" rows="3" placeholder="Details & Erinnerungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white"></textarea></div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <input type="text" id="fame-form-nationality" placeholder="z. B. Japanisch" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
+          </div>
+          <div>
+            <input type="date" id="fame-form-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <input type="text" id="fame-form-location" placeholder="z. B. Hotel Atlas, Shinjuku" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white">
+        </div>
+
+        <div>
+          <input type="file" id="fame-form-file" accept="image/*" class="w-full text-xs text-slate-300 bg-slate-800 border border-slate-700 rounded-lg p-2 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-rose-600 file:text-white hover:file:bg-rose-500 cursor-pointer">
+        </div>
+
+        <div>
+          <select id="fame-form-rating" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+            <option value="5">🔥🔥🔥🔥🔥 (Unvergesslich)</option>
+            <option value="4">🔥🔥🔥🔥 (Sehr gut)</option>
+            <option value="3">🔥🔥🔥 (Gut)</option>
+            <option value="2">🔥🔥 (Solide)</option>
+            <option value="1">🔥 (Anekdote)</option>
+          </select>
+        </div>
+
+        <div>
+          <textarea id="fame-form-notes" rows="3" placeholder="Details & Erinnerungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 focus:outline-none text-white"></textarea>
+        </div>
+
         <button type="submit" id="fame-submit-btn" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
       </form>
     </div>
   </div>
 
+  <!-- DOKUMENTEN MODAL -->
   <div id="doc-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
         <h3 id="doc-sheet-title" class="text-lg font-bold text-slate-100">🔒 Dokument erfassen</h3>
-        <button onclick="toggleModal('doc-sheet', false)" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+        <button onclick="closeDocSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
       </div>
       <form id="doc-form" onsubmit="saveDocEntry(event)" class="space-y-4">
         <input type="hidden" id="doc-form-id">
-        <div><label class="block text-xs text-slate-400 mb-1">Bezeichnung</label><input type="text" id="doc-form-title" required placeholder="z. B. Reisepass, Führerschein" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 text-white focus:outline-none"></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs text-slate-400 mb-1">Typ</label><select id="doc-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="Pass">Passport / Reisepass</option><option value="Führerschein">Führerschein</option><option value="Versicherung">Versicherung</option><option value="Impfpass">Impfpass</option><option value="Kreditkarte">Kreditkarte</option><option value="Sonstiges">Sonstiges</option></select></div>
-          <div><label class="block text-xs text-slate-400 mb-1">Nummer / Police</label><input type="text" id="doc-form-number" placeholder="z. B. C0123456" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none"></div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Bezeichnung</label>
+          <input type="text" id="doc-form-title" required placeholder="z. B. Reisepass, Führerschein" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 text-white focus:outline-none">
         </div>
-        <div><label class="block text-xs text-slate-400 mb-1">Ablaufdatum</label><input type="date" id="doc-form-expiry" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></div>
-        <div><label class="block text-xs text-slate-400 mb-1">Notizen & Hotlines</label><textarea id="doc-form-notes" rows="2" placeholder="Notrufnummern, Bedingungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 text-white focus:outline-none"></textarea></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Typ</label>
+            <select id="doc-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Pass">Passport / Reisepass</option>
+              <option value="Führerschein">Führerschein</option>
+              <option value="Versicherung">Versicherung</option>
+              <option value="Impfpass">Impfpass</option>
+              <option value="Kreditkarte">Kreditkarte</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Nummer / Police</label>
+            <input type="text" id="doc-form-number" placeholder="z. B. C0123456" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Ablaufdatum</label>
+          <input type="date" id="doc-form-expiry" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Notizen & Hotlines</label>
+          <textarea id="doc-form-notes" rows="2" placeholder="Notrufnummern, Bedingungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-rose-500 text-white focus:outline-none"></textarea>
+        </div>
         <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Dokument speichern</button>
       </form>
     </div>
   </div>
 
+  <!-- TRANSPORT MODAL -->
   <div id="transport-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
         <h3 id="transport-sheet-title" class="text-lg font-bold text-slate-100">✈️ Transport erfassen</h3>
-        <button onclick="toggleModal('transport-sheet', false)" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+        <button onclick="closeTransportSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
       </div>
       <form id="transport-form" onsubmit="saveTransportEntry(event)" class="space-y-4">
         <input type="hidden" id="transport-form-id">
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs text-slate-400 mb-1">Von (Start)</label><input type="text" id="transport-form-origin" required placeholder="z. B. Tokio (NRT)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 text-white focus:outline-none"></div>
-          <div><label class="block text-xs text-slate-400 mb-1">Nach (Ziel)</label><input type="text" id="transport-form-dest" required placeholder="z. B. Bangkok (BKK)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 text-white focus:outline-none"></div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Von (Start)</label>
+            <input type="text" id="transport-form-origin" required placeholder="z. B. Tokio (NRT)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 text-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Nach (Ziel)</label>
+            <input type="text" id="transport-form-dest" required placeholder="z. B. Bangkok (BKK)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-blue-500 text-white focus:outline-none">
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs text-slate-400 mb-1">Verkehrsmittel</label><select id="transport-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="Flug">Flug</option><option value="Zug">Zug</option><option value="Bus">Bus</option><option value="Fähre">Fähre</option></select></div>
-          <div><label class="block text-xs text-slate-400 mb-1">Buchungscode (PNR)</label><input type="text" id="transport-form-code" placeholder="z. B. X7Y8Z9" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 uppercase focus:outline-none"></div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Verkehrsmittel</label>
+            <select id="transport-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Flug">Flug</option>
+              <option value="Zug">Zug</option>
+              <option value="Bus">Bus</option>
+              <option value="Fähre">Fähre</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Buchungscode (PNR)</label>
+            <input type="text" id="transport-form-code" placeholder="z. B. X7Y8Z9" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 uppercase focus:outline-none">
+          </div>
         </div>
-        <div><label class="block text-xs text-slate-400 mb-1">Datum / Abflugzeit</label><input type="datetime-local" id="transport-form-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Datum / Abflugzeit</label>
+          <input type="datetime-local" id="transport-form-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Transport speichern</button>
       </form>
     </div>
   </div>
 
+  <!-- EQUIPMENT MODAL -->
   <div id="equipment-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
     <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
       <div class="flex justify-between items-center mb-4">
         <h3 id="equipment-sheet-title" class="text-lg font-bold text-slate-100">🎒 Ausrüstung erfassen</h3>
-        <button onclick="toggleModal('equipment-sheet', false)" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+        <button onclick="closeEquipmentSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
       </div>
       <form id="equipment-form" onsubmit="saveEquipmentEntry(event)" class="space-y-4">
         <input type="hidden" id="equipment-form-id">
-        <div><label class="block text-xs text-slate-400 mb-1">Gegenstand</label><input type="text" id="equipment-form-name" required placeholder="z. B. MacBook Air M2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 text-white focus:outline-none"></div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Gegenstand</label>
+          <input type="text" id="equipment-form-name" required placeholder="z. B. MacBook Air M2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-emerald-500 text-white focus:outline-none">
+        </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs text-slate-400 mb-1">Kategorie</label><select id="equipment-form-cat" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"><option value="Elektronik">Elektronik</option><option value="Kleidung">Kleidung</option><option value="Dokumente">Dokumente</option><option value="Apotheke">Apotheke</option><option value="Kulturtasche">Kulturtasche</option></select></div>
-          <div><label class="block text-xs text-slate-400 mb-1">Gewicht (in Gramm)</label><input type="number" id="equipment-form-weight" placeholder="z. B. 1240" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none"></div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
+            <select id="equipment-form-cat" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Elektronik">Elektronik</option>
+              <option value="Kleidung">Kleidung</option>
+              <option value="Dokumente">Dokumente</option>
+              <option value="Apotheke">Apotheke</option>
+              <option value="Kulturtasche">Kulturtasche</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Gewicht (in Gramm)</label>
+            <input type="number" id="equipment-form-weight" placeholder="z. B. 1240" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none">
+          </div>
         </div>
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Item speichern</button>
       </form>
     </div>
   </div>
 
-  <script>
-  // DOM HELPER FOR SHORT & CLEAN CODE
-  const $ = id => document.getElementById(id);
-  const toggleModal = (id, show = true) => $(id)?.classList.toggle('hidden', !show);
+  <!-- MODAL: APOTHEKE EINGABE (NEW) -->
+  <div id="med-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-slate-100">💊 Medikament erfassen</h3>
+        <button onclick="closeMedSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      <form onsubmit="saveMedEntry(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Name (z.B. Ibuprofen 400)</label>
+          <input type="text" id="med-name" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Menge / Bestand</label>
+            <input type="text" id="med-qty" placeholder="z.B. 20 Tabl." required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Ablaufdatum</label>
+            <input type="month" id="med-exp" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Verwendungszweck (Optional)</label>
+          <input type="text" id="med-use" placeholder="z.B. Schmerzen/Fieber" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
+      </form>
+    </div>
+  </div>
 
+  <script>
   const SUPABASE_URL = 'https://cxhfloptewqgcfrnwyal.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4aGZsb3B0ZXdxZ2Nmcm53eWFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4ODQ5ODAsImV4cCI6MjEwNjQ2MDk4MH0.1vYDNdTTrUofcLiN_d_pv6ZxMBsWuBdc-QK9jtxaARE';
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let countries = [], categories = [], currentCountry = null, allEntries = [], allVisits = [], allFameEntries = [], allExpenses = [], allEquipmentItems = [];
-  let map = null, mapMarkers = [];
+  let countries = [];
+  let categories = [];
+  let currentCountry = null;
+  let allEntries = [];
+  let allVisits = [];
+  let allFameEntries = [];
+  let allExpenses = [];
+  let allEquipmentItems = [];
+  let map = null;
+  let mapMarkers = [];
 
-  const categoryIcons = { Unterkunft: '🏠', Verpflegung: '🍜', Transport: '✈️', Aktivitäten: '🎟️', Versicherung: '🚨', 'SIM/Tech': '📱', Sonstiges: '📦' };
+  const categoryIcons = {
+    'Unterkunft': '🏠',
+    'Verpflegung': '🍜',
+    'Transport': '✈️',
+    'Aktivitäten': '🎟️',
+    'Versicherung': '🚨',
+    'SIM/Tech': '📱',
+    'Sonstiges': '📦'
+  };
 
   const exchangeData = {
-    THB: { rate: 38.50, name: 'Thailändischer Baht' }, JPY: { rate: 160.20, name: 'Japanischer Yen' },
-    USD: { rate: 1.08, name: 'US-Dollar' }, VND: { rate: 27000.0, name: 'Vietnamesischer Dong' },
-    KRW: { rate: 1450.0, name: 'Südkoreanischer Won' }, CNY: { rate: 7.80, name: 'Chinesischer Yuan' },
-    KHR: { rate: 4400.0, name: 'Kambodschanischer Riel' }, PHP: { rate: 62.0, name: 'Philippinischer Peso' },
-    MYR: { rate: 5.00, name: 'Malaysischer Ringgit' }, LAK: { rate: 23000.0, name: 'Laotischer Kip' },
-    MMK: { rate: 2300.0, name: 'Kyat (Myanmar)' }, HKD: { rate: 8.50, name: 'Hongkong-Dollar' },
-    TWD: { rate: 35.0, name: 'Neuer Taiwan-Dollar' }, SGD: { rate: 1.45, name: 'Singapur-Dollar' },
-    IDR: { rate: 17000.0, name: 'Indonesische Rupiah' }, AUD: { rate: 1.65, name: 'Australischer Dollar' },
+    THB: { rate: 38.50, name: 'Thailändischer Baht' },
+    JPY: { rate: 160.20, name: 'Japanischer Yen' },
+    USD: { rate: 1.08, name: 'US-Dollar' },
+    VND: { rate: 27000.0, name: 'Vietnamesischer Dong' },
+    KRW: { rate: 1450.0, name: 'Südkoreanischer Won' },
+    CNY: { rate: 7.80, name: 'Chinesischer Yuan' },
+    KHR: { rate: 4400.0, name: 'Kambodschanischer Riel' },
+    PHP: { rate: 62.0, name: 'Philippinischer Peso' },
+    MYR: { rate: 5.00, name: 'Malaysischer Ringgit' },
+    LAK: { rate: 23000.0, name: 'Laotischer Kip' },
+    MMK: { rate: 2300.0, name: 'Kyat (Myanmar)' },
+    HKD: { rate: 8.50, name: 'Hongkong-Dollar' },
+    TWD: { rate: 35.0, name: 'Neuer Taiwan-Dollar' },
+    SGD: { rate: 1.45, name: 'Singapur-Dollar' },
+    IDR: { rate: 17000.0, name: 'Indonesische Rupiah' },
+    AUD: { rate: 1.65, name: 'Australischer Dollar' },
     EUR: { rate: 1.00, name: 'Euro' }
   };
 
   const countryCoords = {
-    Japan: [36.2048, 138.2529], Südkorea: [35.9078, 127.7669], China: [35.8617, 104.1954],
-    Vietnam: [14.0583, 108.2772], Kambodscha: [12.5657, 104.9910], Thailand: [15.8700, 100.9925],
-    Philippinen: [12.8797, 121.7740], Malaysia: [4.2105, 101.9758], Laos: [19.8563, 102.4955],
-    Myanmar: [21.9162, 95.9560], Singapur: [1.3521, 103.8198], Indonesien: [-0.7893, 113.9213]
+    'Japan': [36.2048, 138.2529],
+    'Südkorea': [35.9078, 127.7669],
+    'China': [35.8617, 104.1954],
+    'Vietnam': [14.0583, 108.2772],
+    'Kambodscha': [12.5657, 104.9910],
+    'Thailand': [15.8700, 100.9925],
+    'Philippinen': [12.8797, 121.7740],
+    'Malaysia': [4.2105, 101.9758],
+    'Laos': [19.8563, 102.4955],
+    'Myanmar': [21.9162, 95.9560],
+    'Singapur': [1.3521, 103.8198],
+    'Indonesien': [-0.7893, 113.9213]
   };
 
+  // NEW: Timezones & Help Texts
+  const timezones = {
+    'Japan': 'Asia/Tokyo', 'Südkorea': 'Asia/Seoul', 'China': 'Asia/Shanghai',
+    'Vietnam': 'Asia/Ho_Chi_Minh', 'Kambodscha': 'Asia/Phnom_Penh', 'Thailand': 'Asia/Bangkok',
+    'Philippinen': 'Asia/Manila', 'Malaysia': 'Asia/Kuala_Lumpur', 'Laos': 'Asia/Vientiane',
+    'Myanmar': 'Asia/Yangon', 'Singapur': 'Asia/Singapore', 'Indonesien': 'Asia/Jakarta'
+  };
+
+  const helpTexts = {
+    'Japan': '助けてください (Tasukete kudasai)', 'Thailand': 'ช่วยด้วย (Chuai duai)',
+    'China': '救命 (Jiùmìng)', 'Vietnam': 'Cứu tôi với (Cuu toi voi)',
+    'Südkorea': '도와주세요 (Dowajuseyo)', 'Kambodscha': 'ជួយខ្ញុំផង (Chuoy khnhom phang)'
+  };
+
+  // Lokale Daten für Reiseapotheke
+  let medications = [
+    { id: 1, name: 'Ibuprofen 400', qty: '20 Stk', exp: '2027-05', use: 'Schmerzen / Fieber' },
+    { id: 2, name: 'Kohletabletten', qty: '30 Stk', exp: '2028-01', use: 'Magen / Darm' },
+    { id: 3, name: 'Elotrans (Elektrolyte)', qty: '10 Beutel', exp: '2026-11', use: 'Dehydration' }
+  ];
+
   window.addEventListener('DOMContentLoaded', async () => {
-    if ($('expense-month-filter')) $('expense-month-filter').value = new Date().toISOString().slice(0, 7);
+    const monthFilter = document.getElementById('expense-month-filter');
+    if (monthFilter) monthFilter.value = new Date().toISOString().slice(0, 7);
+    
+    // Start Clock Interval
+    setInterval(updateClocksAndCountdowns, 1000);
+    
     await loadInitialData();
+    renderMedications();
   });
 
+  // 🏡 CLOCK & COUNTDOWN LOGIC
+  let nextFlightDate = null;
+  function updateClocksAndCountdowns() {
+    const now = new Date();
+    
+    // Zeit in DE
+    const deTimeStr = now.toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute:'2-digit' });
+    const deHour = parseInt(deTimeStr.split(':')[0], 10);
+    
+    // Anrufindikator (9 - 21 Uhr DE-Zeit)
+    const isGoodTime = (deHour >= 9 && deHour <= 21);
+    const callInd = isGoodTime ? '🟢' : '🔴';
+    const callIndText = isGoodTime ? 'Gute Anrufzeit' : 'Schlechte Anrufzeit';
+    const callIndClass = isGoodTime ? 'bg-emerald-900/50 text-emerald-400 border-emerald-700' : 'bg-red-900/50 text-red-400 border-red-700';
+
+    // Lokalzeit
+    let locTimeStr = '--:--';
+    if(currentCountry && timezones[currentCountry.name]) {
+      locTimeStr = now.toLocaleTimeString('de-DE', { timeZone: timezones[currentCountry.name], hour: '2-digit', minute:'2-digit' });
+    }
+
+    // Update Header
+    const hTime = document.getElementById('header-time');
+    if(hTime) hTime.innerHTML = `🇩🇪 ${deTimeStr} ${callInd} &nbsp;|&nbsp; 📍 ${locTimeStr}`;
+    
+    // Update Zentrum
+    const zHome = document.getElementById('home-time-large');
+    if(zHome) zHome.innerText = deTimeStr + ' Uhr';
+    const zLoc = document.getElementById('local-time-large');
+    if(zLoc) zLoc.innerText = locTimeStr;
+    const zInd = document.getElementById('home-call-indicator');
+    if(zInd) {
+      zInd.className = `px-2 py-1 rounded-md text-[10px] font-bold border mb-1 ${callIndClass}`;
+      zInd.innerText = callInd + ' ' + callIndText;
+    }
+
+    // Boarding Countdown Update
+    if(nextFlightDate) {
+      const diff = nextFlightDate - now;
+      const cdEl = document.getElementById('boarding-countdown');
+      if (diff < 0) { 
+        cdEl.innerText = 'Abgeflogen'; 
+      } else {
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((diff / 1000 / 60) % 60);
+        cdEl.innerText = `in ${d}T ${h}h ${m}m`;
+      }
+    }
+  }
+
+  // 🚨 SOS FUNKTIONEN
+  function openSOS() {
+    const emb = currentCountry?.embassy_phone || '+49 30 1817 0 (Zentrale AA)';
+    const emer = currentCountry?.emergency_numbers || '112';
+    const hw = helpTexts[currentCountry?.name] || 'HELP ME / HILFE';
+    
+    document.getElementById('sos-help-text').innerText = hw;
+    document.getElementById('sos-embassy-link').innerText = emb;
+    document.getElementById('sos-embassy-link').href = `tel:${emb.replace(/[^0-9+]/g, '')}`;
+    document.getElementById('sos-local-link').innerText = emer;
+    document.getElementById('sos-local-link').href = `tel:${emer.replace(/[^0-9+]/g, '')}`;
+    
+    document.getElementById('sos-sheet').classList.remove('hidden');
+    document.getElementById('sos-sheet').classList.add('flex');
+  }
+  function closeSOS() {
+    document.getElementById('sos-sheet').classList.add('hidden');
+    document.getElementById('sos-sheet').classList.remove('flex');
+  }
+
+  // 🏥 APOTHEKE FUNKTIONEN
+  function renderMedications() {
+    const list = document.getElementById('med-list');
+    list.innerHTML = '';
+    const now = new Date();
+    
+    medications.sort((a,b) => new Date(a.exp) - new Date(b.exp)).forEach(m => {
+      const expDate = new Date(m.exp);
+      const isExpired = expDate < now;
+      const badge = isExpired 
+        ? `<span class="bg-red-900 text-red-400 text-[8px] px-1 py-0.5 rounded border border-red-700">Abgelaufen</span>`
+        : `<span class="bg-emerald-900 text-emerald-400 text-[8px] px-1 py-0.5 rounded border border-emerald-700">OK</span>`;
+        
+      list.innerHTML += `
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs">
+          <div>
+            <div class="font-bold text-slate-100 flex items-center gap-1.5">${m.name} ${badge}</div>
+            <p class="text-[9px] text-slate-400 mt-0.5">${m.use || 'Allgemein'}</p>
+          </div>
+          <div class="text-right">
+            <div class="font-mono font-bold text-cyan-400">${m.qty}</div>
+            <div class="text-[9px] text-slate-500">EXP: ${m.exp}</div>
+          </div>
+        </div>
+      `;
+    });
+  }
+  
+  function openNewMedModal() { 
+    document.getElementById('med-sheet').classList.remove('hidden'); 
+  }
+  
+  function closeMedSheet() { 
+    document.getElementById('med-sheet').classList.add('hidden'); 
+  }
+  
+  function saveMedEntry(e) {
+    e.preventDefault();
+    medications.push({
+      id: Date.now(),
+      name: document.getElementById('med-name').value,
+      qty: document.getElementById('med-qty').value,
+      exp: document.getElementById('med-exp').value,
+      use: document.getElementById('med-use').value
+    });
+    closeMedSheet();
+    renderMedications();
+  }
+
   function toggleMobileMenu() {
-    const isOpen = !$('mobile-menu').classList.contains('translate-x-full');
-    $('mobile-menu').classList.toggle('translate-x-full', isOpen);
-    $('menu-overlay').classList.toggle('hidden', isOpen);
+    const menu = document.getElementById('mobile-menu');
+    const overlay = document.getElementById('menu-overlay');
+    const isOpen = !menu.classList.contains('translate-x-full');
+
+    if (isOpen) {
+      menu.classList.add('translate-x-full');
+      overlay.classList.add('hidden');
+    } else {
+      menu.classList.remove('translate-x-full');
+      overlay.classList.remove('hidden');
+    }
   }
 
   async function loadInitialData() {
@@ -642,13 +1319,22 @@
       allEntries = entryRes.data || [];
       allVisits = visitRes.data || [];
 
-      const select = $('country-select'), formCountrySelect = $('form-country-select'), formCatSelect = $('form-category-select'), expCountrySelect = $('exp-form-country');
-      select.innerHTML = ''; formCountrySelect.innerHTML = ''; formCatSelect.innerHTML = '';
+      const select = document.getElementById('country-select');
+      const formCountrySelect = document.getElementById('form-country-select');
+      const formCatSelect = document.getElementById('form-category-select');
+      const expCountrySelect = document.getElementById('exp-form-country');
+      
+      select.innerHTML = '';
+      formCountrySelect.innerHTML = '';
+      formCatSelect.innerHTML = '';
       expCountrySelect.innerHTML = '<option value="">-- Keinem Land zugeordnet --</option>';
 
       countries.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c.id; opt.className = 'bg-slate-900 text-white'; opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
+        opt.value = c.id;
+        opt.className = 'bg-slate-900 text-white';
+        opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
+        
         select.appendChild(opt);
         formCountrySelect.appendChild(opt.cloneNode(true));
         expCountrySelect.appendChild(opt.cloneNode(true));
@@ -656,7 +1342,9 @@
 
       categories.forEach(cat => {
         const optCat = document.createElement('option');
-        optCat.value = cat.id; optCat.className = 'bg-slate-900 text-white'; optCat.innerText = `${cat.icon} #${cat.id} - ${cat.title}`;
+        optCat.value = cat.id;
+        optCat.className = 'bg-slate-900 text-white';
+        optCat.innerText = `${cat.icon} #${cat.id} - ${cat.title}`;
         formCatSelect.appendChild(optCat);
       });
 
@@ -665,25 +1353,28 @@
         await changeCountry(countries[0].id);
       }
       calculateGlobalStats();
-    } catch (err) { console.error("Fehler beim Laden:", err); }
+    } catch (err) {
+      console.error("Fehler beim Laden der Initialdaten:", err);
+    }
   }
 
   async function changeCountry(countryId) {
     currentCountry = countries.find(c => c.id == countryId);
     if (!currentCountry) return;
 
-    $('current-flag').innerText = currentCountry.flag_emoji || '🌍';
-    $('safe-taboos').innerText = currentCountry.cat4_taboos || 'Keine speziellen Hinweise hinterlegt.';
+    document.getElementById('current-flag').innerText = currentCountry.flag_emoji || '🌍';
+    document.getElementById('safe-taboos').innerText = currentCountry.cat4_taboos || 'Keine speziellen Hinweise hinterlegt.';
 
     await loadCountryInfo();
     updateCalcCurrencyInfo();
     renderMatrixTable();
     await loadVocabulary();
     renderVisitsList();
+    updateClocksAndCountdowns();
   }
 
   function renderMatrixTable() {
-    const tbody = $('matrix-table-body');
+    const tbody = document.getElementById('matrix-table-body');
     tbody.innerHTML = '';
     if (!currentCountry) return;
 
@@ -695,15 +1386,18 @@
 
     countryEntries.forEach(item => {
       const category = categories.find(c => c.id === item.category_id) || { icon: '📌', id: '?' };
-      let statusBadge = item.status === 'in_planung' 
-        ? '<span class="px-1.5 py-0.5 text-[8px] rounded font-semibold bg-amber-950 text-amber-400 border border-amber-800">⏳ Geplant</span>'
-        : (item.status === 'offen' || !item.status) 
-        ? '<span class="px-1.5 py-0.5 text-[8px] rounded font-semibold bg-slate-800 text-slate-400 border border-slate-700">⭕ Offen</span>'
-        : '<span class="px-1.5 py-0.5 text-[8px] rounded font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">✅ Erlebt</span>';
+
+      let statusBadge = '<span class="px-1.5 py-0.5 text-[8px] rounded font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">✅ Erlebt</span>';
+      if (item.status === 'in_planung') {
+        statusBadge = '<span class="px-1.5 py-0.5 text-[8px] rounded font-semibold bg-amber-950 text-amber-400 border border-amber-800">⏳ Geplant</span>';
+      } else if (item.status === 'offen' || !item.status) {
+        statusBadge = '<span class="px-1.5 py-0.5 text-[8px] rounded font-semibold bg-slate-800 text-slate-400 border border-slate-700">⭕ Offen</span>';
+      }
 
       const tr = document.createElement('tr');
       tr.onclick = () => openEditEntryModal(item);
       tr.className = 'hover:bg-slate-700/40 active:bg-slate-700/60 cursor-pointer transition';
+
       tr.innerHTML = `
         <td class="p-3 text-center text-sm font-medium align-top">${category.icon}</td>
         <td class="p-3 align-top">
@@ -718,108 +1412,161 @@
 
   function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    $(`tab-${tabName}`).classList.remove('hidden');
+    document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
     document.querySelectorAll('.menu-btn-item').forEach(btn => btn.classList.remove('active-menu'));
-    $(`m-nav-${tabName}`)?.classList.add('active-menu');
+    const activeBtn = document.getElementById(`m-nav-${tabName}`);
+    if (activeBtn) activeBtn.classList.add('active-menu');
 
-    if (!$('mobile-menu').classList.contains('translate-x-full')) toggleMobileMenu();
+    const menu = document.getElementById('mobile-menu');
+    if (!menu.classList.contains('translate-x-full')) toggleMobileMenu();
 
-    const loadMap = {
-      rechner: updateCalcCurrencyInfo, zentrum: initMap, finanzen: loadExpenses,
-      sprachen: loadVocabulary, fame: loadHallOfFame, transport: loadTransports,
-      packliste: loadEquipment, laenderinfo: loadCountryInfo, dokumente: loadVaultDocuments
-    };
-    if (loadMap[tabName]) loadMap[tabName]();
+    if (tabName === 'rechner') updateCalcCurrencyInfo();
+    if (tabName === 'zentrum') initMap();
+    if (tabName === 'finanzen') loadExpenses();
+    if (tabName === 'sprachen') loadVocabulary();
+    if (tabName === 'fame') loadHallOfFame();
+    if (tabName === 'transport') loadTransports();
+    if (tabName === 'packliste') loadEquipment();
+    if (tabName === 'laenderinfo') loadCountryInfo();
+    if (tabName === 'dokumente') loadVaultDocuments();
   }
 
   async function loadVaultDocuments() {
-    const container = $('vault-docs-list');
-    const { data: docs } = await supabaseClient.from('documents_vault').select('*').order('expiry_date', { ascending: true });
-    if (!docs || docs.length === 0) {
+    const container = document.getElementById('vault-docs-list');
+    const { data: docs, error } = await supabaseClient.from('documents_vault').select('*').order('expiry_date', { ascending: true });
+
+    if (error || !docs || docs.length === 0) {
       container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Keine Dokumente hinterlegt.</p>`;
       return;
     }
 
     container.innerHTML = '';
     const today = new Date();
+
     docs.forEach(doc => {
       let warningBadge = '';
       if (doc.expiry_date) {
-        const diffMonths = (new Date(doc.expiry_date) - today) / (1000 * 60 * 60 * 24 * 30);
-        warningBadge = diffMonths < 0 
-          ? '<span class="text-[8px] bg-rose-950 text-rose-400 border border-rose-800 px-1 py-0.5 rounded font-bold">ABGELAUFEN</span>'
-          : diffMonths < 6 
-          ? '<span class="text-[8px] bg-amber-950 text-amber-400 border border-amber-800 px-1 py-0.5 rounded font-bold">⚠️ < 6 Mon</span>'
-          : '<span class="text-[8px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-1 py-0.5 rounded font-bold">Gültig</span>';
+        const exp = new Date(doc.expiry_date);
+        const diffMonths = (exp - today) / (1000 * 60 * 60 * 24 * 30);
+
+        if (diffMonths < 0) {
+          warningBadge = '<span class="text-[8px] bg-rose-950 text-rose-400 border border-rose-800 px-1 py-0.5 rounded font-bold">ABGELAUFEN</span>';
+        } else if (diffMonths < 6) {
+          warningBadge = '<span class="text-[8px] bg-amber-950 text-amber-400 border border-amber-800 px-1 py-0.5 rounded font-bold">⚠️ < 6 Mon</span>';
+        } else {
+          warningBadge = '<span class="text-[8px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-1 py-0.5 rounded font-bold">Gültig</span>';
+        }
       }
 
-      const docIcons = { Pass: '🛂', Führerschein: '🪪', Versicherung: '🚨', Impfpass: '💉', Kreditkarte: '💳', Sonstiges: '📄' };
+      const docIcons = { 'Pass': '🛂', 'Führerschein': '🪪', 'Versicherung': '🚨', 'Impfpass': '💉', 'Kreditkarte': '💳', 'Sonstiges': '📄' };
+      const icon = docIcons[doc.doc_type] || '📄';
+
       const itemDiv = document.createElement('div');
       itemDiv.className = 'bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 flex justify-between items-start text-xs cursor-pointer hover:bg-slate-800 transition';
       itemDiv.onclick = () => openEditDocModal(doc);
+
       itemDiv.innerHTML = `
         <div class="space-y-0.5">
-          <div class="flex items-center gap-1.5"><span>${docIcons[doc.doc_type] || '📄'}</span><strong class="text-slate-100 font-bold">${doc.title}</strong>${warningBadge}</div>
+          <div class="flex items-center gap-1.5">
+            <span>${icon}</span>
+            <strong class="text-slate-100 font-bold">${doc.title}</strong>
+            ${warningBadge}
+          </div>
           ${doc.doc_number ? `<p class="text-[10px] font-mono text-emerald-400">Nr: ${doc.doc_number}</p>` : ''}
           ${doc.notes ? `<p class="text-[9px] text-slate-400 leading-tight">${doc.notes}</p>` : ''}
         </div>
-        <div class="text-right text-[9px] text-slate-400 font-mono">${doc.expiry_date ? `Ablauf: ${doc.expiry_date}` : ''}</div>
+        <div class="text-right text-[9px] text-slate-400 font-mono">
+          ${doc.expiry_date ? `Ablauf: ${doc.expiry_date}` : ''}
+        </div>
       `;
       container.appendChild(itemDiv);
     });
   }
 
   function openNewDocModal() {
-    $('doc-sheet-title').innerText = '🔒 Dokument erfassen';
-    $('doc-form').reset(); $('doc-form-id').value = '';
-    toggleModal('doc-sheet', true);
+    document.getElementById('doc-sheet-title').innerText = '🔒 Dokument erfassen';
+    document.getElementById('doc-form').reset();
+    document.getElementById('doc-form-id').value = '';
+    document.getElementById('doc-sheet').classList.remove('hidden');
   }
 
   function openEditDocModal(doc) {
     openNewDocModal();
-    $('doc-sheet-title').innerText = 'Dokument bearbeiten';
-    $('doc-form-id').value = doc.id;
-    $('doc-form-title').value = doc.title;
-    $('doc-form-type').value = doc.doc_type;
-    $('doc-form-number').value = doc.doc_number || '';
-    $('doc-form-expiry').value = doc.expiry_date || '';
-    $('doc-form-notes').value = doc.notes || '';
+    document.getElementById('doc-sheet-title').innerText = 'Dokument bearbeiten';
+    document.getElementById('doc-form-id').value = doc.id;
+    document.getElementById('doc-form-title').value = doc.title;
+    document.getElementById('doc-form-type').value = doc.doc_type;
+    document.getElementById('doc-form-number').value = doc.doc_number || '';
+    document.getElementById('doc-form-expiry').value = doc.expiry_date || '';
+    document.getElementById('doc-form-notes').value = doc.notes || '';
+  }
+
+  function closeDocSheet() { 
+    document.getElementById('doc-sheet').classList.add('hidden'); 
   }
 
   async function saveDocEntry(e) {
     e.preventDefault();
-    const id = $('doc-form-id').value;
+    const id = document.getElementById('doc-form-id').value;
     const payload = {
-      title: $('doc-form-title').value, doc_type: $('doc-form-type').value,
-      doc_number: $('doc-form-number').value || null, expiry_date: $('doc-form-expiry').value || null,
-      notes: $('doc-form-notes').value || null
+      title: document.getElementById('doc-form-title').value,
+      doc_type: document.getElementById('doc-form-type').value,
+      doc_number: document.getElementById('doc-form-number').value || null,
+      expiry_date: document.getElementById('doc-form-expiry').value || null,
+      notes: document.getElementById('doc-form-notes').value || null
     };
     if (id) await supabaseClient.from('documents_vault').update(payload).eq('id', id);
     else await supabaseClient.from('documents_vault').insert([payload]);
-    toggleModal('doc-sheet', false);
+    closeDocSheet();
     await loadVaultDocuments();
   }
 
   async function loadTransports() {
-    const container = $('transport-list');
-    const { data: list } = await supabaseClient.from('transports').select('*').order('departure_time', { ascending: true });
-    if (!list || list.length === 0) {
+    const container = document.getElementById('transport-list');
+    const { data: list, error } = await supabaseClient.from('transports').select('*').order('departure_time', { ascending: true });
+    
+    const widget = document.getElementById('boarding-widget-container');
+    if (error || !list || list.length === 0) {
       container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Keine Transporte hinterlegt.</p>`;
+      widget.classList.add('hidden');
       return;
+    }
+    
+    // Find next upcoming transport for the Boarding Widget
+    const now = new Date();
+    const upcoming = list.find(t => new Date(t.departure_time) > now);
+    
+    if (upcoming) {
+      widget.classList.remove('hidden');
+      document.getElementById('bw-route').innerText = `${upcoming.origin} ➔ ${upcoming.destination}`;
+      document.getElementById('bw-pnr').innerText = upcoming.booking_code || 'N/A';
+      document.getElementById('bw-date').innerText = new Date(upcoming.departure_time).toLocaleDateString('de-DE', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      nextFlightDate = new Date(upcoming.departure_time);
+      
+      // Save PNR globally for copy button
+      window.currentPnr = upcoming.booking_code || '';
+    } else {
+      widget.classList.add('hidden');
+      nextFlightDate = null;
     }
 
     container.innerHTML = '';
-    const transportIcons = { Flug: '✈️', Zug: '🚆', Bus: '🚌', Fähre: '⛴️' };
+    const transportIcons = { 'Flug': '✈️', 'Zug': '🚆', 'Bus': '🚌', 'Fähre': '⛴️' };
+
     list.forEach(item => {
+      const icon = transportIcons[item.transport_type] || '✈️';
       const itemDiv = document.createElement('div');
       itemDiv.className = 'bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs cursor-pointer hover:bg-slate-800 transition';
       itemDiv.onclick = () => openEditTransportModal(item);
+
       itemDiv.innerHTML = `
         <div>
-          <div class="font-bold text-slate-100 flex items-center gap-1.5"><span>${transportIcons[item.transport_type] || '✈️'}</span> ${item.origin} ➔ ${item.destination}</div>
+          <div class="font-bold text-slate-100 flex items-center gap-1.5">
+            <span>${icon}</span> ${item.origin} ➔ ${item.destination}
+          </div>
           <p class="text-[10px] text-slate-400 font-mono mt-0.5">
-            ${item.departure_time ? `📅 ${item.departure_time.slice(0, 10)}` : ''} 
+            ${item.departure_time ? `📅 ${item.departure_time.slice(0, 16).replace('T', ' ')}` : ''} 
             ${item.booking_code ? `• PNR: <strong class="text-emerald-400">${item.booking_code}</strong>` : ''}
           </p>
         </div>
@@ -828,40 +1575,58 @@
     });
   }
 
+  function copyPNR() {
+    if(window.currentPnr) {
+      navigator.clipboard.writeText(window.currentPnr);
+      alert("PNR kopiert: " + window.currentPnr);
+    }
+  }
+
   function openNewTransportModal() {
-    $('transport-sheet-title').innerText = '✈️ Transport erfassen';
-    $('transport-form').reset();$('transport-form-id').value = '';
-    toggleModal('transport-sheet', true);
+    document.getElementById('transport-sheet-title').innerText = '✈️ Transport erfassen';
+    document.getElementById('transport-form').reset();
+    document.getElementById('transport-form-id').value = '';
+    document.getElementById('transport-sheet').classList.remove('hidden');
   }
 
   function openEditTransportModal(item) {
     openNewTransportModal();
-    $('transport-sheet-title').innerText = 'Transport bearbeiten';$('transport-form-id').value = item.id;
-    $('transport-form-origin').value = item.origin;
-    $('transport-form-dest').value = item.destination;
-    $('transport-form-type').value = item.transport_type;
-    $('transport-form-code').value = item.booking_code || '';
-    if (item.departure_time) $('transport-form-date').value = item.departure_time.slice(0, 16);
+    document.getElementById('transport-sheet-title').innerText = 'Transport bearbeiten';
+    document.getElementById('transport-form-id').value = item.id;
+    document.getElementById('transport-form-origin').value = item.origin;
+    document.getElementById('transport-form-dest').value = item.destination;
+    document.getElementById('transport-form-type').value = item.transport_type;
+    document.getElementById('transport-form-code').value = item.booking_code || '';
+    if (item.departure_time) {
+      document.getElementById('transport-form-date').value = item.departure_time.slice(0, 16);
+    }
+  }
+
+  function closeTransportSheet() { 
+    document.getElementById('transport-sheet').classList.add('hidden'); 
   }
 
   async function saveTransportEntry(e) {
     e.preventDefault();
-    const id = $('transport-form-id').value;
+    const id = document.getElementById('transport-form-id').value;
     const payload = {
-      origin: $('transport-form-origin').value, destination:$('transport-form-dest').value,
-      transport_type: $('transport-form-type').value, booking_code:$('transport-form-code').value || null,
-      departure_time: $('transport-form-date').value || null
+      origin: document.getElementById('transport-form-origin').value,
+      destination: document.getElementById('transport-form-dest').value,
+      transport_type: document.getElementById('transport-form-type').value,
+      booking_code: document.getElementById('transport-form-code').value || null,
+      departure_time: document.getElementById('transport-form-date').value || null
     };
     if (id) await supabaseClient.from('transports').update(payload).eq('id', id);
     else await supabaseClient.from('transports').insert([payload]);
-    toggleModal('transport-sheet', false);
+    closeTransportSheet();
     await loadTransports();
   }
 
   async function loadEquipment() {
-    const container = $('equipment-list');
-    const { data: items } = await supabaseClient.from('equipment').select('*').order('category');
-    if (!items || items.length === 0) {
+    const container = document.getElementById('equipment-list');
+    const { data: items, error } = await supabaseClient.from('equipment').select('*').order('category');
+
+    if (error || !items || items.length === 0) {
       container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Keine Ausrüstung erfasst.</p>`;
       return;
     }
@@ -874,6 +1639,7 @@
       if (item.weight_g) totalWeight += item.weight_g;
       const itemDiv = document.createElement('div');
       itemDiv.className = 'bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs';
+
       itemDiv.innerHTML = `
         <div class="flex items-center gap-2">
           <input type="checkbox" ${item.is_packed ? 'checked' : ''} onchange="togglePacked(${item.id}, this.checked)" class="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0">
@@ -884,19 +1650,12 @@
       container.appendChild(itemDiv);
     });
 
-    $('pack-weight-stat').innerText = `Gesamtgewicht: ${(totalWeight / 1000).toFixed(2)} kg`;
+    document.getElementById('pack-weight-stat').innerText = `Gesamtgewicht: ${(totalWeight / 1000).toFixed(2)} kg`;
   }
 
   function editEquipmentByIndex(index) {
     const item = allEquipmentItems[index];
-    if (item) {
-      openNewEquipmentModal();
-      $('equipment-sheet-title').innerText = 'Ausrüstung bearbeiten';
-      $('equipment-form-id').value = item.id;
-      $('equipment-form-name').value = item.item_name;
-      $('equipment-form-cat').value = item.category;
-      $('equipment-form-weight').value = item.weight_g || 0;
-    }
+    if (item) openEditEquipmentModal(item);
   }
 
   async function togglePacked(id, isChecked) {
@@ -905,44 +1664,93 @@
   }
 
   function openNewEquipmentModal() {
-    $('equipment-sheet-title').innerText = '🎒 Ausrüstung erfassen';
-    $('equipment-form').reset();$('equipment-form-id').value = '';
-    toggleModal('equipment-sheet', true);
+    document.getElementById('equipment-sheet-title').innerText = '🎒 Ausrüstung erfassen';
+    document.getElementById('equipment-form').reset();
+    document.getElementById('equipment-form-id').value = '';
+    document.getElementById('equipment-sheet').classList.remove('hidden');
+  }
+
+  function openEditEquipmentModal(item) {
+    openNewEquipmentModal();
+    document.getElementById('equipment-sheet-title').innerText = 'Ausrüstung bearbeiten';
+    document.getElementById('equipment-form-id').value = item.id;
+    document.getElementById('equipment-form-name').value = item.item_name;
+    document.getElementById('equipment-form-cat').value = item.category;
+    document.getElementById('equipment-form-weight').value = item.weight_g || 0;
+  }
+
+  function closeEquipmentSheet() { 
+    document.getElementById('equipment-sheet').classList.add('hidden'); 
   }
 
   async function saveEquipmentEntry(e) {
     e.preventDefault();
-    const id = $('equipment-form-id').value;
+    const id = document.getElementById('equipment-form-id').value;
     const payload = {
-      item_name: $('equipment-form-name').value, category:$('equipment-form-cat').value,
-      weight_g: parseInt($('equipment-form-weight').value) || 0
+      item_name: document.getElementById('equipment-form-name').value,
+      category: document.getElementById('equipment-form-cat').value,
+      weight_g: parseInt(document.getElementById('equipment-form-weight').value) || 0
     };
     if (id) await supabaseClient.from('equipment').update(payload).eq('id', id);
     else await supabaseClient.from('equipment').insert([payload]);
-    toggleModal('equipment-sheet', false);
+    closeEquipmentSheet();
     await loadEquipment();
   }
 
   async function loadCountryInfo() {
     if (!currentCountry) return;
-    const { data } = await supabaseClient.from('country_info').select('*').eq('country_id', currentCountry.id).maybeSingle();
+    
+    const { data, error } = await supabaseClient
+      .from('country_info')
+      .select('*')
+      .eq('country_id', currentCountry.id)
+      .maybeSingle();
 
-    if (!data) {
-      $('info-card-country-name').innerText = `${currentCountry.flag_emoji || '🏳️'} ${currentCountry.name}`;
-      $('info-card-capital-pop').innerText = '';$('info-card-visa-req').innerText = 'Keine Daten vorhanden';
-      $('info-card-max-stay').innerText = '-';$('info-card-power-plug').innerText = '-';
-      $('info-card-sim-tips').innerText = 'Keine SIM-Tipps vorhanden.';$('info-card-embassy-address').innerText = '-';
-      $('info-card-embassy-phone').innerText = '-';$('info-card-emergency').innerText = '-';
+    if (error || !data) {
+      document.getElementById('info-card-country-name').innerText = `${currentCountry.flag_emoji || '🏳️'} ${currentCountry.name}`;
+      document.getElementById('info-card-capital-pop').innerText = '';
+      document.getElementById('info-card-visa-req').innerText = 'Keine Daten vorhanden';
+      document.getElementById('info-card-max-stay').innerText = '-';
+      document.getElementById('info-card-power-plug').innerText = '-';
+      document.getElementById('info-card-sim-tips').innerText = 'Keine SIM-Tipps vorhanden.';
+      document.getElementById('info-card-embassy-address').innerText = '-';
+      document.getElementById('info-card-embassy-phone').innerText = '-';
+      document.getElementById('info-card-emergency').innerText = '-';
+      document.getElementById('visa-tracker-container').innerHTML = '';
       return;
     }
 
-    $('info-card-country-name').innerText = `${currentCountry.flag_emoji || '🏳️'} ${currentCountry.name} (${data.capital || 'Hauptstadt'})`;
-    $('info-card-capital-pop').innerText = data.population ? `👥 ${data.population}` : '';
-    $('info-card-visa-req').innerText = data.visa_req \vert{}\vert{} 'Visumfrei';$('info-card-max-stay').innerText = data.max_stay ? `⏱️ Max. ${data.max_stay}` : '';
-    $('info-card-power-plug').innerText = data.power_plug || 'Typ A/C';
-    $('info-card-sim-tips').innerText = data.sim_tips \vert{}\vert{} '-';$('info-card-embassy-address').innerText = data.embassy_address ? `📍 ${data.embassy_address}` : '-';
-    $('info-card-embassy-phone').innerText = data.embassy_phone ? `📞 ${data.embassy_phone}` : '-';
-    $('info-card-emergency').innerText = data.emergency_numbers ? `🚨 Notruf: ${data.emergency_numbers}` : '-';
+    document.getElementById('info-card-country-name').innerText = `${currentCountry.flag_emoji || '🏳️'} ${currentCountry.name} (${data.capital || 'Hauptstadt'})`;
+    document.getElementById('info-card-capital-pop').innerText = data.population ? `👥 ${data.population}` : '';
+    document.getElementById('info-card-visa-req').innerText = data.visa_req || 'Visumfrei';
+    document.getElementById('info-card-max-stay').innerText = data.max_stay ? `⏱️ Max. ${data.max_stay}` : '';
+    document.getElementById('info-card-power-plug').innerText = data.power_plug || 'Typ A/C';
+    document.getElementById('info-card-sim-tips').innerText = data.sim_tips || '-';
+    document.getElementById('info-card-embassy-address').innerText = data.embassy_address ? `📍 ${data.embassy_address}` : '-';
+    document.getElementById('info-card-embassy-phone').innerText = data.embassy_phone ? `📞 ${data.embassy_phone}` : '-';
+    document.getElementById('info-card-emergency').innerText = data.emergency_numbers ? `🚨 Notruf: ${data.emergency_numbers}` : '-';
+
+    // VISA TRACKER LOGIC
+    const trackerContainer = document.getElementById('visa-tracker-container');
+    const visit = allVisits.find(v => v.country_id === currentCountry.id);
+    let maxDays = parseInt((data.max_stay || '').match(/\d+/));
+    
+    if (visit && visit.start_date && maxDays) {
+      const start = new Date(visit.start_date);
+      const now = new Date();
+      const daysSpent = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+      const remaining = maxDays - daysSpent;
+      
+      if (remaining < 0) {
+        trackerContainer.innerHTML = `<div class="bg-red-900/50 border border-red-500 p-3 rounded-xl flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-xl">⚠️</span><div><p class="text-red-400 font-black uppercase text-[10px]">Overstay Gefahr!</p><p class="text-xs text-red-200 font-bold">Seit ${Math.abs(remaining)} Tagen überfällig</p></div></div></div>`;
+      } else if (remaining <= 5) {
+        trackerContainer.innerHTML = `<div class="bg-orange-900/50 border border-orange-500 p-3 rounded-xl flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-xl">⏳</span><div><p class="text-orange-400 font-black uppercase text-[10px]">Visum läuft ab!</p><p class="text-xs text-orange-200 font-bold">Noch ${remaining} Tage gültig</p></div></div></div>`;
+      } else {
+        trackerContainer.innerHTML = `<div class="bg-emerald-900/40 border border-emerald-500/50 p-3 rounded-xl flex items-center justify-between"><div class="flex items-center gap-2"><span class="text-xl">✅</span><div><p class="text-emerald-400 font-black uppercase text-[10px]">Visum aktiv</p><p class="text-xs text-emerald-200 font-bold">Noch ${remaining} Tage visumfrei</p></div></div></div>`;
+      }
+    } else {
+      trackerContainer.innerHTML = `<div class="bg-slate-800 border border-slate-700 p-2 rounded-xl text-center"><p class="text-[10px] text-slate-400">Kein aktiver Besuch für Visa-Berechnung</p></div>`;
+    }
   }
 
   async function loadExpenses() {
@@ -952,36 +1760,40 @@
   }
 
   function renderExpenseStats() {
-    const selectedMonth = $('expense-month-filter').value;
+    const selectedMonth = document.getElementById('expense-month-filter').value;
     const monthExpenses = allExpenses.filter(e => e.expense_date && e.expense_date.startsWith(selectedMonth));
 
     let total = 0, fixed = 0, variable = 0;
-    const catTotals = { Unterkunft: 0, Verpflegung: 0, Transport: 0, Aktivitäten: 0, Versicherung: 0, 'SIM/Tech': 0, Sonstiges: 0 };
+    const catTotals = { 'Unterkunft': 0, 'Verpflegung': 0, 'Transport': 0, 'Aktivitäten': 0, 'Versicherung': 0, 'SIM/Tech': 0, 'Sonstiges': 0 };
 
     monthExpenses.forEach(item => {
       const amt = parseFloat(item.amount) || 0;
       total += amt;
-      if (item.type === 'fixed') fixed += amt; else variable += amt;
+      if (item.type === 'fixed') fixed += amt;
+      else variable += amt;
+
       const cat = item.category || 'Sonstiges';
       catTotals[cat] = (catTotals[cat] || 0) + amt;
     });
 
-    $('exp-stat-total').innerText = `${total.toFixed(2)} €`;
-    $('exp-stat-fixed').innerText = `${fixed.toFixed(2)} €`;
-    $('exp-stat-variable').innerText = `${variable.toFixed(2)} €`;
-    $('exp-count-label').innerText = `${monthExpenses.length} Posten`;
+    document.getElementById('exp-stat-total').innerText = `${total.toFixed(2)} €`;
+    document.getElementById('exp-stat-fixed').innerText = `${fixed.toFixed(2)} €`;
+    document.getElementById('exp-stat-variable').innerText = `${variable.toFixed(2)} €`;
+    document.getElementById('exp-count-label').innerText = `${monthExpenses.length} Posten`;
 
-    const catContainer = $('expense-category-bars');
+    const catContainer = document.getElementById('expense-category-bars');
     catContainer.innerHTML = '';
 
     Object.keys(catTotals).forEach(cat => {
       const catAmount = catTotals[cat];
       const percent = total > 0 ? Math.round((catAmount / total) * 100) : 0;
+      const icon = categoryIcons[cat] || '📦';
+
       if (catAmount > 0 || total === 0) {
         catContainer.innerHTML += `
           <div>
             <div class="flex justify-between items-center text-xs mb-1">
-              <span class="text-slate-300 font-medium">${categoryIcons[cat] || '📦'} ${cat}</span>
+              <span class="text-slate-300 font-medium">${icon} ${cat}</span>
               <span class="text-slate-400 font-mono"><strong class="text-white">${catAmount.toFixed(2)} €</strong> (${percent}%)</span>
             </div>
             <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/60">
@@ -992,7 +1804,7 @@
       }
     });
 
-    const listContainer = $('expense-list-container');
+    const listContainer = document.getElementById('expense-list-container');
     listContainer.innerHTML = '';
 
     if (monthExpenses.length === 0) {
@@ -1002,57 +1814,77 @@
 
     monthExpenses.forEach(item => {
       const country = countries.find(c => c.id === item.country_id);
+      const icon = categoryIcons[item.category] || '📦';
       const isFixed = item.type === 'fixed';
+
       const div = document.createElement('div');
       div.onclick = () => openEditExpenseModal(item);
       div.className = 'pt-2 flex justify-between items-center cursor-pointer hover:bg-slate-700/30 p-1.5 rounded transition';
+
       div.innerHTML = `
         <div class="flex items-center gap-2.5">
-          <span class="text-lg">${categoryIcons[item.category] || '📦'}</span>
+          <span class="text-lg">${icon}</span>
           <div>
             <p class="text-xs font-bold text-slate-100 flex items-center gap-1.5">
-              ${item.title} ${isFixed ? '<span class="text-[8px] bg-rose-950 text-rose-400 border border-rose-800 px-1 rounded">Fix</span>' : ''}
+              ${item.title}
+              ${isFixed ? '<span class="text-[8px] bg-rose-950 text-rose-400 border border-rose-800 px-1 rounded">Fix</span>' : ''}
             </p>
-            <p class="text-[10px] text-slate-400 mt-0.5">📅 ${item.expense_date} ${country ? `• ${country.flag_emoji}` : ''} ${item.notes ? `• ${item.notes}` : ''}</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">
+              📅 ${item.expense_date} ${country ? `• ${country.flag_emoji}` : ''} ${item.notes ? `• ${item.notes}` : ''}
+            </p>
           </div>
         </div>
-        <div class="text-right"><p class="text-sm font-mono font-bold ${isFixed ? 'text-rose-400' : 'text-emerald-400'}">-${parseFloat(item.amount).toFixed(2)} €</p></div>
+        <div class="text-right">
+          <p class="text-sm font-mono font-bold ${isFixed ? 'text-rose-400' : 'text-emerald-400'}">-${parseFloat(item.amount).toFixed(2)} €</p>
+        </div>
       `;
       listContainer.appendChild(div);
     });
   }
 
   function openNewExpenseModal() {
-    $('expense-sheet-title').innerText = '💰 Neue Ausgabe erfassen';
-    $('expense-form').reset(); $('exp-form-id').value = '';$('exp-form-date').value = new Date().toISOString().split('T')[0];
-    if (currentCountry) $('exp-form-country').value = currentCountry.id;
-    toggleModal('expense-sheet', true);
+    document.getElementById('expense-sheet-title').innerText = '💰 Neue Ausgabe erfassen';
+    document.getElementById('expense-form').reset();
+    document.getElementById('exp-form-id').value = '';
+    document.getElementById('exp-form-date').value = new Date().toISOString().split('T')[0];
+    if (currentCountry) document.getElementById('exp-form-country').value = currentCountry.id;
+    document.getElementById('expense-sheet').classList.remove('hidden');
   }
 
   function openEditExpenseModal(item) {
     openNewExpenseModal();
-    $('expense-sheet-title').innerText = 'Ausgabe bearbeiten';$('exp-form-id').value = item.id;
-    $('exp-form-title').value = item.title;
-    $('exp-form-amount').value = item.amount;
-    $('exp-form-type').value = item.type || 'variable';
-    $('exp-form-category').value = item.category \vert{}\vert{} 'Sonstiges';$('exp-form-date').value = item.expense_date || '';
-    $('exp-form-country').value = item.country_id \vert{}\vert{} '';$('exp-form-notes').value = item.notes || '';
+    document.getElementById('expense-sheet-title').innerText = 'Ausgabe bearbeiten';
+    document.getElementById('exp-form-id').value = item.id;
+    document.getElementById('exp-form-title').value = item.title;
+    document.getElementById('exp-form-amount').value = item.amount;
+    document.getElementById('exp-form-type').value = item.type || 'variable';
+    document.getElementById('exp-form-category').value = item.category || 'Sonstiges';
+    document.getElementById('exp-form-date').value = item.expense_date || '';
+    document.getElementById('exp-form-country').value = item.country_id || '';
+    document.getElementById('exp-form-notes').value = item.notes || '';
+  }
+
+  function closeExpenseSheet() {
+    document.getElementById('expense-sheet').classList.add('hidden');
   }
 
   async function saveExpenseEntry(event) {
     event.preventDefault();
-    const id = $('exp-form-id').value;
+    const id = document.getElementById('exp-form-id').value;
     const payload = {
-      title: $('exp-form-title').value, amount: parseFloat($('exp-form-amount').value),
-      type: $('exp-form-type').value, category:$('exp-form-category').value,
-      expense_date: $('exp-form-date').value, country_id:$('exp-form-country').value || null,
-      notes: $('exp-form-notes').value || null
+      title: document.getElementById('exp-form-title').value,
+      amount: parseFloat(document.getElementById('exp-form-amount').value),
+      type: document.getElementById('exp-form-type').value,
+      category: document.getElementById('exp-form-category').value,
+      expense_date: document.getElementById('exp-form-date').value,
+      country_id: document.getElementById('exp-form-country').value || null,
+      notes: document.getElementById('exp-form-notes').value || null
     };
 
     if (id) await supabaseClient.from('expenses').update(payload).eq('id', id);
     else await supabaseClient.from('expenses').insert([payload]);
 
-    toggleModal('expense-sheet', false);
+    closeExpenseSheet();
     await loadExpenses();
   }
 
@@ -1060,9 +1892,12 @@
     const code = currentCountry?.currency_code || 'USD';
     const info = exchangeData[code] || { rate: 1.0, name: 'Auslandswährung' };
 
-    $('calc-rate-info').innerText = `1 EUR = ${info.rate.toLocaleString('de-DE')} ${code}`;
-    $('calc-curr-name').innerText = info.name; $('calc-curr-code').innerText = code;
-    $('calc-symbol-local').innerText = code; $('calc-label-local').innerText = `Betrag in ${info.name}`;
+    document.getElementById('calc-rate-info').innerText = `1 EUR = ${info.rate.toLocaleString('de-DE')} ${code}`;
+    document.getElementById('calc-curr-name').innerText = info.name;
+    document.getElementById('calc-curr-code').innerText = code;
+    document.getElementById('calc-symbol-local').innerText = code;
+    document.getElementById('calc-label-local').innerText = `Betrag in ${info.name}`;
+
     convertCurrency('local');
   }
 
@@ -1071,98 +1906,130 @@
     const rate = exchangeData[code]?.rate || 1.0;
 
     if (source === 'local') {
-      const val = parseFloat($('calc-input-local').value);$('calc-input-eur').value = (isNaN(val) || val === 0) ? '' : (val / rate).toFixed(2);
+      const val = parseFloat(document.getElementById('calc-input-local').value);
+      document.getElementById('calc-input-eur').value = (isNaN(val) || val === 0) ? '' : (val / rate).toFixed(2);
     } else {
-      const val = parseFloat($('calc-input-eur').value);$('calc-input-local').value = (isNaN(val) || val === 0) ? '' : (val * rate).toFixed(2);
+      const val = parseFloat(document.getElementById('calc-input-eur').value);
+      document.getElementById('calc-input-local').value = (isNaN(val) || val === 0) ? '' : (val * rate).toFixed(2);
     }
   }
 
   function addQuickAmount(amount) {
-    $('calc-input-local').value = (parseFloat($('calc-input-local').value) || 0) + amount;
+    const input = document.getElementById('calc-input-local');
+    input.value = (parseFloat(input.value) || 0) + amount;
     convertCurrency('local');
   }
 
   function multiplyQuickAmount(factor) {
-    const val = parseFloat($('calc-input-local').value) || 0;
-    if (val > 0) { $('calc-input-local').value = val * factor; convertCurrency('local'); }
+    const input = document.getElementById('calc-input-local');
+    const val = parseFloat(input.value) || 0;
+    if (val > 0) {
+      input.value = val * factor;
+      convertCurrency('local');
+    }
   }
 
-  function clearCalc() { $('calc-input-local').value = '';$('calc-input-eur').value = ''; }
+  function clearCalc() {
+    document.getElementById('calc-input-local').value = '';
+    document.getElementById('calc-input-eur').value = '';
+  }
 
   function calculateGlobalStats() {
     const visitCountryIds = new Set(allVisits.map(v => v.country_id));
     const experiencedCountryIds = new Set(allEntries.filter(e => e.status === 'erlebt').map(e => e.country_id));
+    
     const visitedCountryIds = new Set([...visitCountryIds, ...experiencedCountryIds]);
     const visitedCount = visitedCountryIds.size;
-
-    $('stat-world').innerText = `${((visitedCount / 195) * 100).toFixed(1)}%`;
-    $('stat-visited-countries').innerText = visitedCount;
+    const worldPercent = ((visitedCount / 195) * 100).toFixed(1);
 
     const totalEntries = allEntries.length;
     const erlebtEntries = allEntries.filter(e => e.status === 'erlebt').length;
+    const planungEntries = allEntries.filter(e => e.status === 'in_planung').length;
+    const offenEntries = allEntries.filter(e => e.status === 'offen' || !e.status).length;
     
-    $('stat-completed-entries').innerText = `${erlebtEntries} / ${totalEntries} erlebt`;
-    $('stat-progress-bar').style.width = `${totalEntries > 0 ? Math.round((erlebtEntries / totalEntries) * 100) : 0}%`;
-
-    $('stat-count-erlebt').innerText = erlebtEntries;
-    $('stat-count-planung').innerText = allEntries.filter(e => e.status === 'in_planung').length;
-    $('stat-count-offen').innerText = allEntries.filter(e => e.status === 'offen' || !e.status).length;
+    const progressPercent = totalEntries > 0 ? Math.round((erlebtEntries / totalEntries) * 100) : 0;
 
     let totalDaysAbroad = 0;
     allVisits.forEach(v => {
       if (v.start_date) {
-        const diff = Math.ceil(Math.abs((v.end_date ? new Date(v.end_date) : new Date()) - new Date(v.start_date)) / (1000 * 60 * 60 * 24));
-        totalDaysAbroad += isNaN(diff) ? 0 : diff;
+        const start = new Date(v.start_date);
+        const end = v.end_date ? new Date(v.end_date) : new Date();
+        const diffDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24));
+        totalDaysAbroad += isNaN(diffDays) ? 0 : diffDays;
       }
     });
-    $('stat-days-abroad').innerText = totalDaysAbroad;
 
     const catCounts = {};
-    allEntries.filter(e => e.status === 'erlebt').forEach(e => { catCounts[e.category_id] = (catCounts[e.category_id] || 0) + 1; });
-    const topCatId = Object.keys(catCounts).reduce((a, b) => catCounts[a] > catCounts[b] ? a : b, null);
-    const topCat = categories.find(c => c.id == topCatId);
+    allEntries.filter(e => e.status === 'erlebt').forEach(e => {
+      catCounts[e.category_id] = (catCounts[e.category_id] || 0) + 1;
+    });
+    let topCatId = Object.keys(catCounts).reduce((a, b) => catCounts[a] > catCounts[b] ? a : b, null);
+    let topCat = categories.find(c => c.id == topCatId);
+
+    document.getElementById('stat-world').innerText = `${worldPercent}%`;
+    document.getElementById('stat-visited-countries').innerText = visitedCount;
+    document.getElementById('stat-days-abroad').innerText = totalDaysAbroad;
+    
+    document.getElementById('stat-completed-entries').innerText = `${erlebtEntries} / ${totalEntries} erlebt`;
+    document.getElementById('stat-progress-bar').style.width = `${progressPercent}%`;
+
+    document.getElementById('stat-count-erlebt').innerText = erlebtEntries;
+    document.getElementById('stat-count-planung').innerText = planungEntries;
+    document.getElementById('stat-count-offen').innerText = offenEntries;
 
     if (topCat) {
-      $('stat-top-category').innerText = `${topCat.icon} ${topCat.title}`;
-      $('stat-top-category-sub').innerText = `${catCounts[topCatId]} Abenteuer gemeistert`;
+      document.getElementById('stat-top-category').innerText = `${topCat.icon} ${topCat.title}`;
+      document.getElementById('stat-top-category-sub').innerText = `${catCounts[topCatId]} Abenteuer gemeistert`;
     } else {
-      $('stat-top-category').innerText = 'Noch keine';$('stat-top-category-sub').innerText = 'Erlebnisse auf ✅ Erlebt stellen';
+      document.getElementById('stat-top-category').innerText = 'Noch keine';
+      document.getElementById('stat-top-category-sub').innerText = 'Erlebnisse auf ✅ Erlebt stellen';
     }
 
     updateMapMarkers(visitedCountryIds);
   }
 
   function openNewEntryModal() {
-    $('sheet-title').innerText = '+ Neues Erlebnis anlegen';
-    $('entry-form').reset();$('form-entry-id').value = '';
-    if (currentCountry) $('form-country-select').value = currentCountry.id;
-    toggleModal('entry-sheet', true);
+    document.getElementById('sheet-title').innerText = '+ Neues Erlebnis anlegen';
+    document.getElementById('entry-form').reset();
+    document.getElementById('form-entry-id').value = '';
+    if (currentCountry) document.getElementById('form-country-select').value = currentCountry.id;
+    document.getElementById('entry-sheet').classList.remove('hidden');
   }
 
   function openEditEntryModal(item) {
-    $('sheet-title').innerText = 'Erlebnis bearbeiten';$('form-entry-id').value = item.id;
-    $('form-country-select').value = item.country_id;
-    $('form-category-select').value = item.category_id;
-    $('form-title').value = item.title;
-    $('form-status').value = item.status \vert{}\vert{} 'erlebt';$('form-rating').value = item.rating || 0;
-    $('form-location').value = item.location \vert{}\vert{} '';$('form-notes').value = item.notes || '';
-    toggleModal('entry-sheet', true);
+    document.getElementById('sheet-title').innerText = 'Erlebnis bearbeiten';
+    document.getElementById('form-entry-id').value = item.id;
+    document.getElementById('form-country-select').value = item.country_id;
+    document.getElementById('form-category-select').value = item.category_id;
+    document.getElementById('form-title').value = item.title;
+    document.getElementById('form-status').value = item.status || 'erlebt';
+    document.getElementById('form-rating').value = item.rating || 0;
+    document.getElementById('form-location').value = item.location || '';
+    document.getElementById('form-notes').value = item.notes || '';
+    document.getElementById('entry-sheet').classList.remove('hidden');
+  }
+
+  function closeEntrySheet() {
+    document.getElementById('entry-sheet').classList.add('hidden');
   }
 
   async function saveEntry(event) {
     event.preventDefault();
-    const entryId = $('form-entry-id').value;
+    const entryId = document.getElementById('form-entry-id').value;
     const payload = {
-      country_id: $('form-country-select').value, category_id: parseInt($('form-category-select').value),
-      title: $('form-title').value, status:$('form-status').value,
-      rating: parseInt($('form-rating').value) \vert{}\vert{} null, location:$('form-location').value || null,
-      notes: $('form-notes').value || null
+      country_id: document.getElementById('form-country-select').value,
+      category_id: parseInt(document.getElementById('form-category-select').value),
+      title: document.getElementById('form-title').value,
+      status: document.getElementById('form-status').value,
+      rating: parseInt(document.getElementById('form-rating').value) || null,
+      location: document.getElementById('form-location').value || null,
+      notes: document.getElementById('form-notes').value || null
     };
 
     if (entryId) await supabaseClient.from('entries').update(payload).eq('id', entryId);
     else await supabaseClient.from('entries').insert([payload]);
 
-    toggleModal('entry-sheet', false);
+    closeEntrySheet();
     await loadInitialData();
   }
 
@@ -1190,10 +2057,13 @@
   }
 
   function renderVisitsList() {
-    const container = $('visits-list');
+    const container = document.getElementById('visits-list');
     if (!currentCountry) return;
     const cVisits = allVisits.filter(v => v.country_id === currentCountry.id);
-    if (cVisits.length === 0) { container.innerHTML = '<p class="text-xs text-slate-500 italic">Noch keine Besuche eingetragen.</p>'; return; }
+    if (cVisits.length === 0) {
+      container.innerHTML = '<p class="text-xs text-slate-500 italic">Noch keine Besuche eingetragen.</p>';
+      return;
+    }
     container.innerHTML = '';
     cVisits.forEach(v => {
       container.innerHTML += `
@@ -1209,26 +2079,32 @@
     const title = prompt("Besuch Name:");
     if (!title) return;
     const start = prompt("Startdatum (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-    await supabaseClient.from('visits').insert([{ country_id: currentCountry.id, title, start_date: start, travel_type: 'Backpacking' }]);
+    const payload = { country_id: currentCountry.id, title, start_date: start, travel_type: 'Backpacking' };
+    await supabaseClient.from('visits').insert([payload]);
     await loadInitialData();
   }
 
   async function loadVocabulary() {
-    const container = $('vocab-list');
+    const container = document.getElementById('vocab-list');
     if (!currentCountry) return;
     const { data: vocabs } = await supabaseClient.from('vocabulary').select('*').eq('country_id', currentCountry.id);
     container.innerHTML = (!vocabs || vocabs.length === 0) ? `<p class="text-center text-xs text-slate-500 py-6">Keine Vokabeln.</p>` : '';
     vocabs?.forEach(v => {
       container.innerHTML += `
         <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
-          <div><div class="font-bold text-emerald-400">${v.original_phrase}</div><div class="text-slate-300">${v.translation}</div></div>
+          <div>
+            <div class="font-bold text-emerald-400">${v.original_phrase}</div>
+            <div class="text-slate-300">${v.translation}</div>
+          </div>
           <button onclick="speakText('${v.original_phrase}')" class="bg-slate-700 p-2 rounded-lg active:scale-95 transition">🔊</button>
         </div>
       `;
     });
   }
 
-  function speakText(text) { if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); }
+  function speakText(text) {
+    if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+  }
 
   async function openNewVocabModal() {
     const phrase = prompt("Vokabel / Satz:");
@@ -1246,11 +2122,12 @@
   }
 
   function renderHallOfFame() {
-    const container = $('fame-cards-container');
+    const container = document.getElementById('fame-cards-container');
     container.innerHTML = '';
-    $('fame-stat-total').innerText = allFameEntries.length;
-    $('fame-stat-countries').innerText = new Set(allFameEntries.map(e => e.country_id)).size;
-    $('fame-stat-target-percent').innerText = countries.length > 0 ? `${((new Set(allFameEntries.map(e => e.country_id)).size / countries.length) * 100).toFixed(0)}%` : '0%';
+
+    document.getElementById('fame-stat-total').innerText = allFameEntries.length;
+    document.getElementById('fame-stat-countries').innerText = new Set(allFameEntries.map(e => e.country_id)).size;
+    document.getElementById('fame-stat-target-percent').innerText = countries.length > 0 ? `${((new Set(allFameEntries.map(e => e.country_id)).size / countries.length) * 100).toFixed(0)}%` : '0%';
 
     if (allFameEntries.length === 0) {
       container.innerHTML = `<p class="col-span-2 text-center text-slate-500 py-10 text-xs italic">Noch keine Einträge. 🔥</p>`;
@@ -1262,10 +2139,18 @@
       const card = document.createElement('div');
       card.onclick = () => openEditFameModal(item);
       card.className = 'bg-slate-800 rounded-xl border border-slate-700/60 overflow-hidden shadow-lg cursor-pointer flex flex-col justify-between';
+
+      const imageHeader = item.photo_url 
+        ? `<div class="h-28 w-full bg-cover bg-center" style="background-image: url('${item.photo_url}')"></div>` 
+        : `<div class="h-20 w-full bg-slate-900/60 flex items-center justify-center text-3xl text-slate-700">👤</div>`;
+
       card.innerHTML = `
-        ${item.photo_url ? `<div class="h-28 w-full bg-cover bg-center" style="background-image: url('${item.photo_url}')"></div>` : `<div class="h-20 w-full bg-slate-900/60 flex items-center justify-center text-3xl text-slate-700">👤</div>`}
+        ${imageHeader}
         <div class="p-3">
-          <div class="flex justify-between items-start"><h3 class="font-bold text-slate-100 text-sm">${item.name}</h3><span class="text-xs">${country.flag_emoji}</span></div>
+          <div class="flex justify-between items-start">
+            <h3 class="font-bold text-slate-100 text-sm">${item.name}</h3>
+            <span class="text-xs">${country.flag_emoji}</span>
+          </div>
           <p class="text-[10px] text-rose-400 font-medium mt-0.5">${item.nationality || country.name}</p>
         </div>
       `;
@@ -1274,58 +2159,80 @@
   }
 
   function openNewFameModal() {
-    $('fame-sheet-title').innerText = '🔥 Neuer Hall of Fame Eintrag';
-    $('fame-form').reset(); $('fame-form-id').value = '';$('fame-form-date').value = new Date().toISOString().split('T')[0];
-    const countrySelect = $('fame-form-country');
+    document.getElementById('fame-sheet-title').innerText = '🔥 Neuer Hall of Fame Eintrag';
+    document.getElementById('fame-form').reset();
+    document.getElementById('fame-form-id').value = '';
+    document.getElementById('fame-form-date').value = new Date().toISOString().split('T')[0];
+    const countrySelect = document.getElementById('fame-form-country');
     countrySelect.innerHTML = '';
     countries.forEach(c => {
-      const opt = document.createElement('option'); opt.value = c.id; opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
       countrySelect.appendChild(opt);
     });
-    toggleModal('fame-sheet', true);
+    document.getElementById('fame-sheet').classList.remove('hidden');
   }
 
   function openEditFameModal(item) {
     openNewFameModal();
-    $('fame-sheet-title').innerText = 'Eintrag bearbeiten';
-    $('fame-form-id').value = item.id; $('fame-form-name').value = item.name;
-    $('fame-form-country').value = item.country_id; $('fame-form-gender').value = item.gender || 'weiblich';
-    $('fame-form-nationality').value = item.nationality \vert{}\vert{} '';$('fame-form-date').value = item.encounter_date || '';
-    $('fame-form-location').value = item.location \vert{}\vert{} '';$('fame-form-existing-photo').value = item.photo_url || '';
-    $('fame-form-rating').value = item.rating \vert{}\vert{} 5; $('fame-form-notes').value = item.notes || '';
+    document.getElementById('fame-sheet-title').innerText = 'Eintrag bearbeiten';
+    document.getElementById('fame-form-id').value = item.id;
+    document.getElementById('fame-form-name').value = item.name;
+    document.getElementById('fame-form-country').value = item.country_id;
+    document.getElementById('fame-form-gender').value = item.gender || 'weiblich';
+    document.getElementById('fame-form-nationality').value = item.nationality || '';
+    document.getElementById('fame-form-date').value = item.encounter_date || '';
+    document.getElementById('fame-form-location').value = item.location || '';
+    document.getElementById('fame-form-existing-photo').value = item.photo_url || '';
+    document.getElementById('fame-form-rating').value = item.rating || 5;
+    document.getElementById('fame-form-notes').value = item.notes || '';
+  }
+
+  function closeFameSheet() {
+    document.getElementById('fame-sheet').classList.add('hidden');
   }
 
   async function saveFameEntry(event) {
     event.preventDefault();
-    const submitBtn = $('fame-submit-btn');
-    submitBtn.innerText = 'Speichert...'; submitBtn.disabled = true;
+    const submitBtn = document.getElementById('fame-submit-btn');
+    submitBtn.innerText = 'Speichert...';
+    submitBtn.disabled = true;
 
     try {
-      const id = $('fame-form-id').value;
-      const fileInput = $('fame-form-file');
-      let photoUrl = $('fame-form-existing-photo').value || null;
+      const id = document.getElementById('fame-form-id').value;
+      const fileInput = document.getElementById('fame-form-file');
+      let photoUrl = document.getElementById('fame-form-existing-photo').value || null;
 
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${file.name.split('.').pop()}`;
         const { error: uploadError } = await supabaseClient.storage.from('fame-photos').upload(fileName, file);
-        if (!uploadError) photoUrl = supabaseClient.storage.from('fame-photos').getPublicUrl(fileName).data.publicUrl;
+        if (!uploadError) {
+          photoUrl = supabaseClient.storage.from('fame-photos').getPublicUrl(fileName).data.publicUrl;
+        }
       }
 
       const payload = {
-        name: $('fame-form-name').value, country_id:$('fame-form-country').value,
-        gender: $('fame-form-gender').value, nationality:$('fame-form-nationality').value || null,
-        encounter_date: $('fame-form-date').value \vert{}\vert{} null, location:$('fame-form-location').value || null,
-        photo_url: photoUrl, rating: parseInt($('fame-form-rating').value) \vert{}\vert{} 5, notes:$('fame-form-notes').value || null
+        name: document.getElementById('fame-form-name').value,
+        country_id: document.getElementById('fame-form-country').value,
+        gender: document.getElementById('fame-form-gender').value,
+        nationality: document.getElementById('fame-form-nationality').value || null,
+        encounter_date: document.getElementById('fame-form-date').value || null,
+        location: document.getElementById('fame-form-location').value || null,
+        photo_url: photoUrl,
+        rating: parseInt(document.getElementById('fame-form-rating').value) || 5,
+        notes: document.getElementById('fame-form-notes').value || null
       };
 
       if (id) await supabaseClient.from('hall_of_fame').update(payload).eq('id', id);
       else await supabaseClient.from('hall_of_fame').insert([payload]);
 
-      toggleModal('fame-sheet', false);
+      closeFameSheet();
       await loadHallOfFame();
     } finally {
-      submitBtn.innerText = 'Speichern'; submitBtn.disabled = false;
+      submitBtn.innerText = 'Speichern';
+      submitBtn.disabled = false;
     }
   }
   </script>
