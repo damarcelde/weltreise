@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#07110f">
+  <title>Weltreise OS · Travel Command Center</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Leaflet CSS & JS für die Weltkarte -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { slate: { 850: '#131f32' } } } }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --bg-deep: #06100d;
+      --bg-main: #091613;
+      --surface: rgba(17, 29, 25, 0.85);
+      --surface-strong: rgba(22, 37, 32, 0.94);
+      --border: rgba(148, 163, 184, 0.13);
+      --text: #f5faf8;
+      --accent: #34d399;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--bg-deep); scroll-behavior: smooth; }
+
+    body {
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(52,211,153,.15), transparent 28rem),
+        radial-gradient(circle at 0% 35%, rgba(45,212,191,.08), transparent 18rem),
+        linear-gradient(180deg, #07110f 0%, #0a1512 40%, #091310 100%);
+      color: var(--text);
+      letter-spacing: -0.01em;
+      padding-top: max(4.5rem, calc(env(safe-area-inset-top) + 3.8rem));
+      padding-bottom: max(6rem, calc(env(safe-area-inset-bottom) + 4rem));
+    }
+
+    main {
+      width: 100%;
+      max-width: 30rem !important;
+      margin: 0 auto;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
+    .tab-content:not(.hidden) { animation: tabIn .22s ease-out; }
+    @keyframes tabIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse-red {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+    .sos-btn { animation: pulse-red 2s infinite; }
+
+    .app-header {
+      background: rgba(6, 16, 13, 0.92) !important;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(148,163,184,.14);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      padding-top: max(.65rem, env(safe-area-inset-top)) !important;
+      padding-bottom: .65rem;
+    }
+
+    .country-pill {
+      min-width: 0;
+      flex: 1;
+      padding: .45rem .75rem;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(255,255,255,.04);
+      border-radius: .9rem;
+    }
+
+    .bottom-sheet {
+      border-top-left-radius: 1.5rem !important;
+      border-top-right-radius: 1.5rem !important;
+      background: #0b1714 !important;
+      padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+      box-shadow: 0 -25px 70px rgba(0,0,0,.6);
+    }
+
+    .bottom-sheet::before {
+      content: ""; display: block; width: 2.8rem; height: .25rem;
+      border-radius: 99px; background: rgba(148,163,184,.25); margin: -.1rem auto 1rem;
+    }
+
+    #map, #country-map {
+      border-radius: 1rem;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), 0 14px 30px rgba(0,0,0,.25);
+    }
+    
+    .leaflet-layer { filter: invert(100%) hue-rotate(180deg) brightness(88%) contrast(92%); }
+
+    /* Fester unterer Navigationsbalken für mobile Nutzung */
+    .app-nav {
+      position: fixed;
+      bottom: max(0.5rem, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(30rem, calc(100% - 1.5rem));
+      background: rgba(9, 22, 19, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 1.25rem;
+      padding: 0.4rem;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 50;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.85rem;
+      color: #94a3b8;
+      font-size: 0.6rem;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .nav-item.nav-active {
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.12);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans select-none">
+
+  <!-- TOP HEADER -->
+  <header class="app-header fixed top-0 left-0 right-0 z-40 px-4">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-2">
+      <!-- 🚨 SOS FAST BUTTON -->
+      <button onclick="openSOS()" aria-label="Notfall SOS" class="sos-btn shrink-0 px-2.5 py-1.5 rounded-xl bg-red-600/20 border border-red-500/50 text-red-400 text-xs font-black active:scale-95 transition flex items-center gap-1">
+        <span>🚨</span> SOS
+      </button>
+
+      <!-- 🌍 COUNTRY & TIME PILL -->
+      <div class="country-pill flex flex-col justify-center min-w-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="current-flag" class="text-lg shrink-0">🌍</span>
+          <div class="min-w-0 flex-1">
+            <select id="country-select" onchange="changeCountry(this.value)" class="bg-transparent text-white font-bold text-sm focus:outline-none cursor-pointer truncate w-full">
+              <option value="">Lade Länder...</option>
+            </select>
+          </div>
+        </div>
+        <div id="header-time" class="text-[9px] text-slate-400 font-mono font-medium pl-6 truncate mt-0.5">
+          Lade Zeiten...
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 🚨 FULLSCREEN SOS SHEET -->
+  <div id="sos-sheet" class="fixed inset-0 bg-red-950/95 backdrop-blur-xl z-[100] hidden flex-col items-center justify-center p-6 text-center">
+    <div class="absolute top-8 right-6">
+      <button onclick="closeSOS()" class="text-red-300 bg-red-900/60 hover:bg-red-900 p-3 rounded-full text-xl font-bold">&times;</button>
+    </div>
+    
+    <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center text-4xl shadow-[0_0_50px_rgba(220,38,38,0.6)] mb-5 animate-pulse">🚨</div>
+    
+    <h1 class="text-3xl font-black text-white mb-1">NOTFALL PASS (2 REISENDE)</h1>
+    <p id="sos-help-text" class="text-xl font-bold text-red-400 mb-6 tracking-wide">HELP ME / HILFE</p>
+    
+    <div class="w-full max-w-sm space-y-3">
+      <div class="bg-red-900/40 border border-red-500/40 p-4 rounded-2xl text-left">
+        <p class="text-[10px] uppercase text-red-300 font-bold mb-1">Lokaler Notruf (Polizei/Ambulanz)</p>
+        <a id="sos-local-link" href="#" class="text-2xl font-mono font-black text-white block">112</a>
+      </div>
+      
+      <div class="bg-slate-900/80 border border-slate-700/60 p-4 rounded-2xl text-left">
+        <p class="text-[10px] uppercase text-slate-400 font-bold mb-1">Deutsche Botschaft / AA Hotline</p>
+        <a id="sos-embassy-link" href="#" class="text-lg font-mono font-bold text-emerald-400 block">+49 30 1817 0</a>
+      </div>
+      
+      <div class="bg-slate-900/80 border border-slate-700/60 p-4 rounded-2xl text-left space-y-2 text-xs">
+        <div class="flex justify-between border-b border-slate-800 pb-1.5">
+          <div>
+            <span class="text-[9px] text-slate-400 block uppercase">Reisender 1</span>
+            <span class="font-bold text-white">O Positiv (O+) · HanseMerkur</span>
+          </div>
+          <span class="text-emerald-400 font-bold">Keine Allergien</span>
+        </div>
+        <div class="flex justify-between">
+          <div>
+            <span class="text-[9px] text-slate-400 block uppercase">Reisender 2</span>
+            <span class="font-bold text-white">A Positiv (A+) · HanseMerkur</span>
+          </div>
+          <span class="text-emerald-400 font-bold">Keine Allergien</span>
+        </div>
+      </div>
+    </div>
+    
+    <p class="text-[11px] text-red-300/80 mt-8">Zeige diesen Bildschirm im Notfall Passanten oder Rettungskräften.</p>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[110] flex flex-col gap-2 pointer-events-none w-full max-w-xs px-4"></div>
+
+  <!-- CUSTOM CONFIRMATION MODAL -->
+  <div id="confirm-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 w-full max-w-sm space-y-4 shadow-2xl">
+      <h3 id="confirm-modal-title" class="text-base font-bold text-slate-100">Eintrag löschen?</h3>
+      <p id="confirm-modal-msg" class="text-xs text-slate-400 leading-relaxed">Möchtest du diesen Eintrag wirklich unwiderruflich löschen?</p>
+      <div class="flex gap-2 justify-end pt-2">
+        <button onclick="closeConfirmModal(false)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-4 py-2 rounded-xl font-semibold transition">Abbrechen</button>
+        <button id="confirm-modal-action-btn" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-4 py-2 rounded-xl font-bold shadow transition">Löschen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="space-y-4">
+
+    <!-- TAB 1: MATRIX & ERLEBNISSE -->
+    <section id="tab-matrix" class="tab-content space-y-3">
+      <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg">
+        <div>
+          <p class="text-[10px] uppercase font-extrabold text-slate-400 tracking-wider">Reiseplan</p>
+          <h2 class="text-lg font-black text-slate-100">Erlebnisse & Matrix</h2>
+        </div>
+        <button onclick="openNewEntryModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 rounded-xl font-bold shadow transition active:scale-95">
+          + Erlebnis
+        </button>
+      </div>
+
+      <!-- Interaktive Karte des gewählten Landes -->
+      <div class="bg-slate-800 rounded-2xl p-3 border border-slate-700/60 shadow-xl">
+        <div class="flex justify-between items-center mb-2 px-1">
+          <h3 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <span>🗺️</span> Karte & Orte (<span id="map-country-name">Land</span>)
+          </h3>
+          <span id="map-marker-count" class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full font-medium">0 Orte</span>
+        </div>
+        <div id="country-map" class="h-48 w-full rounded-xl border border-slate-700/80"></div>
+      </div>
+      
+      <div class="bg-slate-800 rounded-2xl border border-slate-700/60 overflow-hidden shadow-xl">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950/80 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-700/60">
+            <tr>
+              <th class="p-3 w-8 text-center">Kat</th>
+              <th class="p-3">Erlebnis & Ort</th>
+              <th class="p-3 text-right w-20">Status</th>
+            </tr>
+          </thead>
+          <tbody id="matrix-table-body" class="divide-y divide-slate-700/40">
+            <tr>
+              <td colspan="3" class="text-center text-slate-500 py-8">Lade Erlebnisse...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: TRANSPORT & FLÜGE -->
+    <section id="tab-transport" class="tab-content hidden space-y-3">
+      <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg">
+        <div>
+          <h2 class="text-base font-bold text-blue-400 flex items-center gap-2">✈️ Transport & Flug-Hub</h2>
+          <p class="text-[10px] text-slate-400">Flüge, Züge, Busse & PNR-Codes</p>
+        </div>
+        <button onclick="openNewTransportModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-2 rounded-xl font-bold shadow transition active:scale-95">+ Fahrt</button>
+      </div>
+      
+      <div id="transport-list" class="space-y-2">
+        <p class="text-xs text-slate-500 italic text-center py-4">Lade Transporte...</p>
+      </div>
+    </section>
+
+    <!-- TAB 3: PACKLISTE -->
+    <section id="tab-packliste" class="tab-content hidden space-y-3">
+      <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg">
+        <div>
+          <h2 class="text-base font-bold text-emerald-400 flex items-center gap-2">🎒 Packliste & Equipment</h2>
+          <p class="text-[10px] text-slate-400" id="pack-weight-stat">Gesamtgewicht: 0 kg</p>
+        </div>
+        <button onclick="openNewEquipmentModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-xl font-bold shadow transition active:scale-95">+ Item</button>
+      </div>
+      <div id="equipment-list" class="space-y-2">
+        <p class="text-xs text-slate-500 italic text-center py-4">Lade Ausrüstung...</p>
+      </div>
+    </section>
+
+    <!-- TAB 4: LÄNDERINFOS -->
+    <section id="tab-laenderinfo" class="tab-content hidden space-y-3">
+      <div class="bg-slate-800/90 border border-emerald-500/40 rounded-2xl p-4 shadow-xl space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+          <h3 class="text-base font-extrabold text-emerald-400 flex items-center gap-2" id="info-card-country-name">
+            📌 Lade Länderdaten...
+          </h3>
+          <span class="text-xs font-mono font-bold text-slate-300" id="info-card-capital-pop"></span>
+        </div>
+
+        <div id="visa-tracker-container"></div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50">
+            <p class="text-[9px] uppercase text-slate-400 font-bold">🛂 Visum & Aufenthalt</p>
+            <p class="font-bold text-slate-200 mt-1" id="info-card-visa-req">-</p>
+            <p class="text-[10px] text-emerald-400 font-mono mt-0.5" id="info-card-max-stay">-</p>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50">
+            <p class="text-[9px] uppercase text-slate-400 font-bold">🔌 Stecker & Netz</p>
+            <p class="font-bold text-slate-200 mt-1" id="info-card-power-plug">-</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 text-xs">
+          <p class="text-[9px] uppercase text-amber-400 font-bold">📱 SIM-Karten & Internet-Tipps</p>
+          <p class="text-slate-300 mt-1 leading-relaxed" id="info-card-sim-tips">-</p>
+        </div>
+
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 text-xs space-y-1">
+          <p class="text-[9px] uppercase text-rose-400 font-bold">🏛️ Deutsche Botschaft & Notruf</p>
+          <p class="text-slate-200 font-medium" id="info-card-embassy-address">-</p>
+          <p class="text-slate-400 font-mono" id="info-card-embassy-phone">-</p>
+          <p class="text-amber-400 font-mono font-bold pt-1 border-t border-slate-800" id="info-card-emergency">-</p>
+        </div>
+
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-purple-500/30 text-xs space-y-1">
+          <p class="text-[9px] uppercase text-purple-400 font-bold">💡 Kulturelle Tabus & Verhaltensregeln</p>
+          <p id="safe-taboos" class="text-slate-300 leading-relaxed mt-1">Lade Verhaltensregeln...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: DOKUMENTE VAULT -->
+    <section id="tab-dokumente" class="tab-content hidden space-y-3">
+      <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg">
+        <div>
+          <h2 class="text-base font-bold text-rose-400 flex items-center gap-2">🔒 Dokumenten-Vault</h2>
+          <p class="text-[10px] text-slate-400">Pässe, Policen & Führerscheine</p>
+        </div>
+        <button onclick="openNewDocModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-2 rounded-xl font-bold shadow transition active:scale-95">+ Dok</button>
+      </div>
+      <div id="vault-docs-list" class="space-y-2">
+        <p class="text-xs text-slate-500 italic text-center py-4">Lade Dokumente...</p>
+      </div>
+    </section>
+
+    <!-- TAB 6: GESUNDHEIT & APOTHEKE -->
+    <section id="tab-gesundheit" class="tab-content hidden space-y-3">
+      <div class="bg-red-950/30 border border-red-500/30 rounded-2xl p-4 shadow-xl">
+        <h2 class="text-sm font-bold text-red-400 flex items-center gap-2 mb-3">🪪 Medizinischer Notfallpass (Paar)</h2>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
+            <span class="text-[9px] text-slate-400 block uppercase">Reisender 1</span>
+            <span class="font-bold text-white text-xs">O+ · Keine Allergien</span>
+          </div>
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50">
+            <span class="text-[9px] text-slate-400 block uppercase">Reisender 2</span>
+            <span class="font-bold text-white text-xs">A+ · Keine Allergien</span>
+          </div>
+          <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 col-span-2 flex justify-between items-center">
+            <div>
+              <span class="text-[9px] text-slate-400 block uppercase">Gemeinsame Versicherung</span>
+              <span class="font-bold text-white">HanseMerkur - Police: 123456</span>
+            </div>
+            <span class="text-xl">🛡️</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 shadow-lg mt-4">
+        <div>
+          <h2 class="text-base font-bold text-cyan-400 flex items-center gap-2">💊 Reiseapotheke</h2>
+          <p class="text-[10px] text-slate-400">Bestand & Ablauffristen</p>
+        </div>
+        <button onclick="openNewMedModal()" class="bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-3 py-2 rounded-xl font-bold shadow transition active:scale-95">+ Med</button>
+      </div>
+      
+      <div id="med-list" class="space-y-2"></div>
+    </section>
+
+    <!-- TAB 7: REISEZENTRUM & KARTE -->
+    <section id="tab-zentrum" class="tab-content hidden space-y-4">
+      <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-4 border border-slate-700/60 shadow-xl flex items-center justify-between">
+        <div>
+          <p class="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-1">🏡 Zeit in Deutschland (DE)</p>
+          <p class="text-2xl font-mono font-black text-white" id="home-time-large">--:--</p>
+        </div>
+        <div class="text-right flex flex-col items-end">
+          <div id="home-call-indicator" class="px-2 py-1 rounded-md text-[10px] font-bold border mb-1">Lade...</div>
+          <p class="text-[10px] text-slate-400">Lokalzeit: <span id="local-time-large" class="text-emerald-400 font-mono font-bold">--:--</span></p>
+        </div>
+      </div>
+
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-4">
+        <div class="flex justify-around text-center">
+          <div>
+            <p class="text-2xl font-extrabold text-emerald-400" id="stat-world">0%</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Welt entdeckt</p>
+          </div>
+          <div class="border-x border-slate-700/60 px-4">
+            <p class="text-2xl font-extrabold text-emerald-400" id="stat-visited-countries">0</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Länder bereist</p>
+          </div>
+          <div>
+            <p class="text-2xl font-extrabold text-emerald-400" id="stat-days-abroad">0</p>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tage auf Reise</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl">
+        <h2 class="text-sm font-bold mb-3 flex items-center gap-2">🗺️ Interaktive Weltkarte</h2>
+        <div id="map" class="h-60 w-full rounded-xl border border-slate-700"></div>
+      </div>
+
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-sm font-bold flex items-center gap-2">📅 Besuchshistorie</h2>
+          <button onclick="addVisitPrompt()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium shadow">+ Besuch</button>
+        </div>
+        <div id="visits-list" class="space-y-2">
+          <p class="text-xs text-slate-500 italic">Keine Besuche eingetragen.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 8: WÄHRUNGSRECHNER -->
+    <section id="tab-rechner" class="tab-content hidden space-y-4">
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl">
+        <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700/50 mb-4 flex justify-between items-center">
+          <div>
+            <p class="text-[10px] text-slate-400 uppercase font-semibold">Aktueller Wechselkurs</p>
+            <p class="text-sm font-mono font-bold text-emerald-400 mt-0.5" id="calc-rate-info">1 EUR = --</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-bold text-slate-300" id="calc-curr-name">Lade Währung...</span>
+            <p class="text-[9px] text-slate-500 uppercase font-mono" id="calc-curr-code">EUR</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/80">
+            <div class="flex justify-between items-center text-xs text-slate-400 mb-1">
+              <span id="calc-label-local">Landeswährung</span>
+              <button onclick="clearCalc()" class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-rose-400">Clear</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="number" id="calc-input-local" oninput="convertCurrency('local')" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-emerald-400 font-bold focus:outline-none">
+              <span class="text-sm font-mono text-slate-400 font-bold" id="calc-symbol-local">---</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/80">
+            <div class="text-xs text-slate-400 mb-1">Betrag in Euro (€)</div>
+            <div class="flex items-center gap-2">
+              <input type="number" id="calc-input-eur" oninput="convertCurrency('eur')" placeholder="0" class="w-full bg-transparent text-2xl font-mono text-white font-bold focus:outline-none">
+              <span class="text-sm font-mono text-slate-400 font-bold">EUR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 9: GEMEINSAMES FINANZ-BUDGET -->
+    <section id="tab-finanzen" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">💰 Gemeinsames Budget (2 Personen)</h2>
+          <p class="text-[10px] text-slate-400">Ausgaben für das Paar</p>
+        </div>
+        <button onclick="openNewExpenseModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+          + Ausgabe
+        </button>
+      </div>
+
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
+          <label class="text-xs text-slate-400 font-semibold uppercase">Monat wählen:</label>
+          <input type="month" id="expense-month-filter" onchange="renderExpenseStats()" class="bg-slate-900 text-emerald-400 font-mono text-xs font-bold px-2 py-1 rounded border border-slate-700 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center pt-1">
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-semibold">Gesamt</p>
+            <p class="text-lg font-mono font-extrabold text-white mt-0.5" id="exp-stat-total">0,00 €</p>
+          </div>
+          <div class="border-x border-slate-700/60 px-1">
+            <p class="text-xs text-slate-400 uppercase font-semibold">Ø / Tag (2 P.)</p>
+            <p class="text-lg font-mono font-extrabold text-cyan-400 mt-0.5" id="exp-stat-daily">0,00 €</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 uppercase font-semibold">Fixkosten</p>
+            <p class="text-lg font-mono font-extrabold text-rose-400 mt-0.5" id="exp-stat-fixed">0,00 €</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
+        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Kategorien-Aufschlüsselung</h3>
+        <div id="expense-category-bars" class="space-y-2.5">
+          <p class="text-xs text-slate-500 italic text-center">Lade Statistiken...</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
+          <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Buchungen im Monat</h3>
+          <span class="text-[10px] text-slate-500" id="exp-count-label">0 Posten</span>
+        </div>
+        <div id="expense-list-container" class="space-y-2 divide-y divide-slate-700/40">
+          <p class="text-xs text-slate-500 italic text-center py-4">Keine Ausgaben in diesem Monat.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 10: SPRACHEN -->
+    <section id="tab-sprachen" class="tab-content hidden space-y-3">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold flex items-center gap-2">🗣 Vokabel-Trainer</h2>
+        <button onclick="openNewVocabModal()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium">+ Neu</button>
+      </div>
+      <div id="vocab-list" class="space-y-2"></div>
+    </section>
+
+    <!-- TAB 11: HALL OF FAME -->
+    <section id="tab-fame" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">🔥 Hall of Fame</h2>
+          <p class="text-[10px] text-slate-400">Bekanntschaften & Erinnerungen</p>
+        </div>
+        <button onclick="openNewFameModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow transition">
+          + Neuer Eintrag
+        </button>
+      </div>
+
+      <div id="fame-cards-container" class="grid grid-cols-2 gap-3">
+        <p class="col-span-2 text-center text-slate-500 py-8 text-xs">Lade Hall of Fame...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FIXED BOTTOM NAVIGATION BAR -->
+  <nav class="app-nav">
+    <button onclick="switchTab('matrix')" id="nav-matrix" class="nav-item nav-active">
+      <span class="text-base">🌍</span><span>Matrix</span>
+    </button>
+    <button onclick="switchTab('transport')" id="nav-transport" class="nav-item">
+      <span class="text-base">✈️</span><span>Transport</span>
+    </button>
+    <button onclick="switchTab('packliste')" id="nav-packliste" class="nav-item">
+      <span class="text-base">🎒</span><span>Packen</span>
+    </button>
+    <button onclick="switchTab('laenderinfo')" id="nav-laenderinfo" class="nav-item">
+      <span class="text-base">📌</span><span>Infos</span>
+    </button>
+    <button onclick="switchTab('dokumente')" id="nav-dokumente" class="nav-item">
+      <span class="text-base">🔒</span><span>Vault</span>
+    </button>
+    <button onclick="switchTab('gesundheit')" id="nav-gesundheit" class="nav-item">
+      <span class="text-base">🏥</span><span>Med</span>
+    </button>
+    <button onclick="switchTab('zentrum')" id="nav-zentrum" class="nav-item">
+      <span class="text-base">🗺️</span><span>Zentrum</span>
+    </button>
+    <button onclick="switchTab('rechner')" id="nav-rechner" class="nav-item">
+      <span class="text-base">💱</span><span>Rechner</span>
+    </button>
+    <button onclick="switchTab('finanzen')" id="nav-finanzen" class="nav-item">
+      <span class="text-base">💰</span><span>Finanzen</span>
+    </button>
+    <button onclick="switchTab('sprachen')" id="nav-sprachen" class="nav-item">
+      <span class="text-base">🗣️</span><span>Sprache</span>
+    </button>
+    <button onclick="switchTab('fame')" id="nav-fame" class="nav-item">
+      <span class="text-base">🔥</span><span>Fame</span>
+    </button>
+  </nav>
+
+  <!-- MODAL: MATRIX ERLEBNIS (MIT GPS & LÖSCHEN) -->
+  <div id="entry-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="sheet-title" class="text-lg font-bold text-slate-100">Erlebnis bearbeiten</h3>
+        <button onclick="closeEntrySheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+
+      <form id="entry-form" onsubmit="saveEntry(event)" class="space-y-4">
+        <input type="hidden" id="form-entry-id">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Land auswählen</label>
+          <select id="form-country-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
+          <select id="form-category-select" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Titel / Erlebnis</label>
+          <textarea id="form-title" rows="2" required placeholder="Titel des Erlebnisses..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none resize-none"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Status</label>
+            <select id="form-status" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="erlebt">✅ Erlebt</option>
+              <option value="in_planung">⏳ In Planung</option>
+              <option value="offen">⭕ Offen</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Bewertung</label>
+            <select id="form-rating" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="0">- Keine -</option>
+              <option value="5">⭐⭐⭐⭐⭐</option>
+              <option value="4">⭐⭐⭐⭐</option>
+              <option value="3">⭐⭐⭐</option>
+              <option value="2">⭐⭐</option>
+              <option value="1">⭐</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Ort / Spot Name</label>
+          <input type="text" id="form-location" placeholder="z. B. Shibuya Crossing, Tokio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+
+        <!-- GPS KOORDINATEN MIT QUICK-GEOLOCATION BUTTON -->
+        <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-slate-300 font-semibold">📍 GPS-Koordinaten</span>
+            <button type="button" onclick="fetchCurrentGPS()" class="bg-emerald-950 hover:bg-emerald-900 text-emerald-400 border border-emerald-700/60 text-[10px] font-bold px-2.5 py-1 rounded-lg transition">
+              📍 Standorterfassung
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[9px] uppercase text-slate-400">Breitengrad (Lat)</label>
+              <input type="number" step="any" id="form-lat" placeholder="35.6595" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-emerald-400 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[9px] uppercase text-slate-400">Längengrad (Lng)</label>
+              <input type="number" step="any" id="form-lng" placeholder="139.7004" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-emerald-400 focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Erinnerungen & Notizen</label>
+          <textarea id="form-notes" rows="2" placeholder="Besondere Erinnerungen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          <button type="button" id="entry-delete-btn" onclick="deleteEntryFromModal()" class="w-1/3 bg-rose-950/80 border border-rose-800 text-rose-400 font-bold py-2.5 rounded-lg text-sm transition hidden">
+            Löschen
+          </button>
+          <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DOKUMENTE VAULT (MIT LÖSCHEN) -->
+  <div id="doc-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="doc-sheet-title" class="text-lg font-bold text-slate-100">🔒 Dokument erfassen</h3>
+        <button onclick="closeDocSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      <form id="doc-form" onsubmit="saveDocEntry(event)" class="space-y-4">
+        <input type="hidden" id="doc-form-id">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Bezeichnung</label>
+          <input type="text" id="doc-form-title" required placeholder="z. B. Reisepass" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Typ</label>
+            <select id="doc-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Pass">Reisepass</option>
+              <option value="Führerschein">Führerschein</option>
+              <option value="Versicherung">Versicherung</option>
+              <option value="Impfpass">Impfpass</option>
+              <option value="Kreditkarte">Kreditkarte</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Inhaber (Person)</label>
+            <select id="doc-form-holder" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Gemeinsam">👥 Gemeinsam</option>
+              <option value="Person 1">👤 Partner 1</option>
+              <option value="Person 2">👤 Partner 2</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Nummer / Police</label>
+            <input type="text" id="doc-form-number" placeholder="z. B. C0123456" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Ablaufdatum</label>
+            <input type="date" id="doc-form-expiry" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Notizen & Hotlines</label>
+          <textarea id="doc-form-notes" rows="2" placeholder="Notrufnummern..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"></textarea>
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button type="button" id="doc-delete-btn" onclick="deleteDocFromModal()" class="w-1/3 bg-rose-950/80 border border-rose-800 text-rose-400 font-bold py-2.5 rounded-lg text-sm transition hidden">
+            Löschen
+          </button>
+          <button type="submit" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TRANSPORT (MIT LÖSCHEN) -->
+  <div id="transport-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="transport-sheet-title" class="text-lg font-bold text-slate-100">✈️ Transport erfassen</h3>
+        <button onclick="closeTransportSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      <form id="transport-form" onsubmit="saveTransportEntry(event)" class="space-y-4">
+        <input type="hidden" id="transport-form-id">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Von (Start)</label>
+            <input type="text" id="transport-form-origin" required placeholder="Tokio (NRT)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Nach (Ziel)</label>
+            <input type="text" id="transport-form-dest" required placeholder="Bangkok (BKK)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Verkehrsmittel</label>
+            <select id="transport-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Flug">Flug</option>
+              <option value="Zug">Zug</option>
+              <option value="Bus">Bus</option>
+              <option value="Fähre">Fähre</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Buchungscode (PNR)</label>
+            <input type="text" id="transport-form-code" placeholder="X7Y8Z9" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 uppercase focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Datum / Abflugzeit</label>
+          <input type="datetime-local" id="transport-form-date" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button type="button" id="transport-delete-btn" onclick="deleteTransportFromModal()" class="w-1/3 bg-rose-950/80 border border-rose-800 text-rose-400 font-bold py-2.5 rounded-lg text-sm transition hidden">
+            Löschen
+          </button>
+          <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EQUIPMENT (MIT LÖSCHEN) -->
+  <div id="equipment-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="equipment-sheet-title" class="text-lg font-bold text-slate-100">🎒 Ausrüstung erfassen</h3>
+        <button onclick="closeEquipmentSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      <form id="equipment-form" onsubmit="saveEquipmentEntry(event)" class="space-y-4">
+        <input type="hidden" id="equipment-form-id">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Gegenstand</label>
+          <input type="text" id="equipment-form-name" required placeholder="MacBook Air" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
+            <select id="equipment-form-cat" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Elektronik">Elektronik</option>
+              <option value="Kleidung">Kleidung</option>
+              <option value="Dokumente">Dokumente</option>
+              <option value="Apotheke">Apotheke</option>
+              <option value="Kulturtasche">Kulturtasche</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Gewicht (Gramm)</label>
+            <input type="number" id="equipment-form-weight" placeholder="1240" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-emerald-400 focus:outline-none">
+          </div>
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button type="button" id="equipment-delete-btn" onclick="deleteEquipmentFromModal()" class="w-1/3 bg-rose-950/80 border border-rose-800 text-rose-400 font-bold py-2.5 rounded-lg text-sm transition hidden">
+            Löschen
+          </button>
+          <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AUSGABEN (MIT LÖSCHEN) -->
+  <div id="expense-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="expense-sheet-title" class="text-lg font-bold text-slate-100">💰 Neue Ausgabe erfassen</h3>
+        <button onclick="closeExpenseSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      <form id="expense-form" onsubmit="saveExpenseEntry(event)" class="space-y-4">
+        <input type="hidden" id="exp-form-id">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Titel</label>
+          <input type="text" id="exp-form-title" required placeholder="Hotel Tokio" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Betrag in Euro (€)</label>
+            <input type="number" step="0.01" id="exp-form-amount" required placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono font-bold text-emerald-400 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Art</label>
+            <select id="exp-form-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="variable">💸 Variabel</option>
+              <option value="fixed">📌 Fixkosten</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Kategorie</label>
+            <select id="exp-form-category" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+              <option value="Unterkunft">🏠 Unterkunft</option>
+              <option value="Verpflegung">🍜 Verpflegung</option>
+              <option value="Transport">✈️ Transport</option>
+              <option value="Aktivitäten">🎟️ Aktivitäten</option>
+              <option value="Versicherung">🚨 Versicherung</option>
+              <option value="SIM/Tech">📱 SIM / Tech</option>
+              <option value="Sonstiges">📦 Sonstiges</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Datum</label>
+            <input type="date" id="exp-form-date" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Land (Optional)</label>
+          <select id="exp-form-country" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+            <option value="">-- Keinem Land zugeordnet --</option>
+          </select>
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button type="button" id="exp-delete-btn" onclick="deleteExpenseFromModal()" class="w-1/3 bg-rose-950/80 border border-rose-800 text-rose-400 font-bold py-2.5 rounded-lg text-sm transition hidden">
+            Löschen
+          </button>
+          <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: APOTHEKE -->
+  <div id="med-sheet" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-900 border-t border-slate-700 rounded-t-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto bottom-sheet">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-slate-100">💊 Medikament erfassen</h3>
+        <button onclick="closeMedSheet()" class="text-slate-400 text-xl font-bold p-1">&times;</button>
+      </div>
+      <form onsubmit="saveMedEntry(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Name</label>
+          <input type="text" id="med-name" required placeholder="Ibuprofen 400" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Bestand</label>
+            <input type="text" id="med-qty" placeholder="20 Stk." required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Ablaufdatum</label>
+            <input type="month" id="med-exp" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Zweck</label>
+          <input type="text" id="med-use" placeholder="Schmerzen" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+        </div>
+        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Speichern</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://cxhfloptewqgcfrnwyal.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4aGZsb3B0ZXdxZ2Nmcm53eWFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4ODQ5ODAsImV4cCI6MjEwNjQ2MDk4MH0.1vYDNdTTrUofcLiN_d_pv6ZxMBsWuBdc-QK9jtxaARE';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let countries = [];
+    let categories = [];
+    let currentCountry = null;
+    let allEntries = [];
+    let allVisits = [];
+    let allExpenses = [];
+    let map = null;
+    let mapMarkers = [];
+    let countryMap = null;
+    let countryMarkers = [];
+
+    const categoryIcons = {
+      'Unterkunft': '🏠', 'Verpflegung': '🍜', 'Transport': '✈️',
+      'Aktivitäten': '🎟️', 'Versicherung': '🚨', 'SIM/Tech': '📱', 'Sonstiges': '📦'
+    };
+
+    const exchangeData = {
+      THB: { rate: 38.50, name: 'Thailändischer Baht' },
+      JPY: { rate: 160.20, name: 'Japanischer Yen' },
+      USD: { rate: 1.08, name: 'US-Dollar' },
+      VND: { rate: 27000.0, name: 'Vietnamesischer Dong' },
+      EUR: { rate: 1.00, name: 'Euro' }
+    };
+
+    const countryCoords = {
+      'Japan': [36.2048, 138.2529], 'Südkorea': [35.9078, 127.7669],
+      'Thailand': [15.8700, 100.9925], 'Vietnam': [14.0583, 108.2772]
+    };
+
+    const timezones = {
+      'Japan': 'Asia/Tokyo', 'Südkorea': 'Asia/Seoul', 'Thailand': 'Asia/Bangkok', 'Vietnam': 'Asia/Ho_Chi_Minh'
+    };
+
+    const helpTexts = {
+      'Japan': '助けてください (Tasukete kudasai)', 'Thailand': 'ช่วยด้วย (Chuai duai)'
+    };
+
+    let medications = [
+      { id: 1, name: 'Ibuprofen 400', qty: '20 Stk', exp: '2027-05', use: 'Schmerzen / Fieber' }
+    ];
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const monthFilter = document.getElementById('expense-month-filter');
+      if (monthFilter) monthFilter.value = new Date().toISOString().slice(0, 7);
+      setInterval(updateClocksAndCountdowns, 1000);
+      await loadInitialData();
+      renderMedications();
+    });
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const bgClass = type === 'error' ? 'bg-rose-900 border-rose-500 text-white' : 'bg-emerald-900 border-emerald-500 text-white';
+      toast.className = `p-3 rounded-xl border ${bgClass} text-xs font-bold shadow-2xl flex items-center gap-2 transition-all duration-300`;
+      toast.innerHTML = `<span>${type === 'error' ? '⚠️' : '✅'}</span> <span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3200);
+    }
+
+    let confirmCallback = null;
+    function showConfirmModal(title, msg, onConfirm) {
+      document.getElementById('confirm-modal-title').innerText = title;
+      document.getElementById('confirm-modal-msg').innerText = msg;
+      confirmCallback = onConfirm;
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+
+    function closeConfirmModal(isConfirmed) {
+      document.getElementById('confirm-modal').classList.add('hidden');
+      if (isConfirmed && confirmCallback) confirmCallback();
+      confirmCallback = null;
+    }
+    document.getElementById('confirm-modal-action-btn').onclick = () => closeConfirmModal(true);
+
+    function fetchCurrentGPS() {
+      if (!navigator.geolocation) {
+        showToast("GPS wird nicht unterstützt.", "error");
+        return;
+      }
+      showToast("📍 Ermittle GPS-Koordinaten...");
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById('form-lat').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('form-lng').value = pos.coords.longitude.toFixed(6);
+          showToast("GPS erfolgreich erfasst!");
+        },
+        () => showToast("Standort konnte nicht ermittelt werden.", "error"),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    function updateClocksAndCountdowns() {
+      const now = new Date();
+      const deTimeStr = now.toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute:'2-digit' });
+      let locTimeStr = '--:--';
+      if(currentCountry && timezones[currentCountry.name]) {
+        locTimeStr = now.toLocaleTimeString('de-DE', { timeZone: timezones[currentCountry.name], hour: '2-digit', minute:'2-digit' });
+      }
+      const hTime = document.getElementById('header-time');
+      if(hTime) hTime.innerHTML = `🇩🇪 ${deTimeStr} &nbsp;|&nbsp; 📍 ${locTimeStr}`;
+      
+      const zHome = document.getElementById('home-time-large');
+      if(zHome) zHome.innerText = deTimeStr + ' Uhr';
+      const zLoc = document.getElementById('local-time-large');
+      if(zLoc) zLoc.innerText = locTimeStr;
+    }
+
+    function openSOS() {
+      const emb = currentCountry?.embassy_phone || '+49 30 1817 0';
+      const emer = currentCountry?.emergency_numbers || '112';
+      const hw = helpTexts[currentCountry?.name] || 'HELP ME / HILFE';
+      document.getElementById('sos-help-text').innerText = hw;
+      document.getElementById('sos-embassy-link').innerText = emb;
+      document.getElementById('sos-local-link').innerText = emer;
+      document.getElementById('sos-sheet').classList.remove('hidden');
+      document.getElementById('sos-sheet').classList.add('flex');
+    }
+
+    function closeSOS() {
+      document.getElementById('sos-sheet').classList.add('hidden');
+      document.getElementById('sos-sheet').classList.remove('flex');
+    }
+
+    async function loadInitialData() {
+      try {
+        const [catRes, countryRes, entryRes, visitRes] = await Promise.all([
+          supabaseClient.from('matrix_categories').select('*').order('id'),
+          supabaseClient.from('countries').select('*').order('name'),
+          supabaseClient.from('entries').select('*').order('id'),
+          supabaseClient.from('visits').select('*')
+        ]);
+
+        categories = catRes.data || [];
+        countries = countryRes.data || [];
+        allEntries = entryRes.data || [];
+        allVisits = visitRes.data || [];
+
+        const select = document.getElementById('country-select');
+        const formCountrySelect = document.getElementById('form-country-select');
+        const formCatSelect = document.getElementById('form-category-select');
+        const expCountrySelect = document.getElementById('exp-form-country');
+        
+        select.innerHTML = '';
+        formCountrySelect.innerHTML = '';
+        formCatSelect.innerHTML = '';
+        expCountrySelect.innerHTML = '<option value="">-- Keinem Land zugeordnet --</option>';
+
+        countries.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.className = 'bg-slate-900 text-white';
+          opt.innerText = `${c.flag_emoji || '🏳️'} ${c.name}`;
+          select.appendChild(opt);
+          formCountrySelect.appendChild(opt.cloneNode(true));
+          expCountrySelect.appendChild(opt.cloneNode(true));
+        });
+
+        categories.forEach(cat => {
+          const optCat = document.createElement('option');
+          optCat.value = cat.id;
+          optCat.className = 'bg-slate-900 text-white';
+          optCat.innerText = `${cat.icon || '📌'} #${cat.id} - ${cat.title || cat.name}`;
+          formCatSelect.appendChild(optCat);
+        });
+
+        if (countries.length > 0) {
+          select.value = countries[0].id;
+          await changeCountry(countries[0].id);
+        }
+        calculateGlobalStats();
+      } catch (err) {
+        console.error("Initial load error:", err);
+      }
+    }
+
+    async function changeCountry(countryId) {
+      currentCountry = countries.find(c => c.id == countryId);
+      if (!currentCountry) return;
+
+      document.getElementById('current-flag').innerText = currentCountry.flag_emoji || '🌍';
+      document.getElementById('safe-taboos').innerText = currentCountry.cat4_taboos || 'Keine Hinweise.';
+
+      await loadCountryInfo();
+      updateCalcCurrencyInfo();
+      renderMatrixTable();
+      renderVisitsList();
+      updateCountryMap();
+    }
+
+    function renderMatrixTable() {
+      const tbody = document.getElementById('matrix-table-body');
+      tbody.innerHTML = '';
+      if (!currentCountry) return;
+
+      const countryEntries = allEntries.filter(e => e.country_id === currentCountry.id);
+      if (countryEntries.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center text-slate-500 py-8">Keine Erlebnisse für ${currentCountry.name} hinterlegt.</td></tr>`;
+        return;
+      }
+
+      countryEntries.forEach(item => {
+        const category = categories.find(c => c.id === item.category_id) || { icon: '📌' };
+        let statusBadge = '<span class="px-1.5 py-0.5 text-[8px] rounded font-semibold bg-emerald-950 text-emerald-400">✅ Erlebt</span>';
+        if (item.status === 'in_planung') statusBadge = '<span class="px-1.5 py-0.5 text-[8px] rounded font-semibold bg-amber-950 text-amber-400">⏳ Geplant</span>';
+        else if (item.status === 'offen') statusBadge = '<span class="px-1.5 py-0.5 text-[8px] rounded font-semibold bg-slate-800 text-slate-400">⭕ Offen</span>';
+
+        const tr = document.createElement('tr');
+        tr.onclick = () => openEditEntryModal(item);
+        tr.className = 'hover:bg-slate-700/40 cursor-pointer transition';
+        tr.innerHTML = `
+          <td class="p-3 text-center text-sm align-top">${category.icon || '📌'}</td>
+          <td class="p-3 align-top">
+            <div class="font-medium text-slate-100 text-xs">${item.title}</div>
+            ${item.location ? `<div class="text-[10px] text-emerald-400 mt-0.5">📍 ${item.location}</div>` : ''}
+          </td>
+          <td class="p-3 text-right align-top">${statusBadge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('nav-active'));
+      const activeBtn = document.getElementById(`nav-${tabName}`);
+      if (activeBtn) activeBtn.classList.add('nav-active');
+
+      if (tabName === 'zentrum') initMap();
+      if (tabName === 'finanzen') loadExpenses();
+      if (tabName === 'transport') loadTransports();
+      if (tabName === 'packliste') loadEquipment();
+      if (tabName === 'dokumente') loadVaultDocuments();
+      if (tabName === 'matrix') updateCountryMap();
+    }
+
+    // MAPS
+    function initMap() {
+      if (!map) {
+        map = L.map('map').setView([20, 100], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+      }
+      setTimeout(() => map.invalidateSize(), 200);
+    }
+
+    function updateCountryMap() {
+      const mapContainer = document.getElementById('country-map');
+      if (!mapContainer || !currentCountry) return;
+
+      if (!countryMap) {
+        countryMap = L.map('country-map').setView([20, 100], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(countryMap);
+      }
+
+      countryMarkers.forEach(m => countryMap.removeLayer(m));
+      countryMarkers = [];
+
+      document.getElementById('map-country-name').innerText = currentCountry.name;
+      const coords = countryCoords[currentCountry.name] || [20, 100];
+      countryMap.setView(coords, 5);
+
+      const countryEntries = allEntries.filter(e => e.country_id === currentCountry.id);
+      let validCount = 0;
+
+      countryEntries.forEach(item => {
+        const cat = categories.find(c => c.id === item.category_id) || { icon: '📍' };
+        if (item.lat && item.lng) {
+          const marker = L.marker([item.lat, item.lng]).addTo(countryMap)
+            .bindPopup(`<b>${cat.icon || '📍'} ${item.title}</b><br><span style="font-size:10px;">${item.location || ''}</span>`);
+          countryMarkers.push(marker);
+          validCount++;
+        }
+      });
+      document.getElementById('map-marker-count').innerText = `${validCount} Orte`;
+      setTimeout(() => countryMap.invalidateSize(), 200);
+    }
+
+    // CRUD: MATRIX / ERLEBNISSE
+    function openNewEntryModal() {
+      document.getElementById('sheet-title').innerText = '+ Neues Erlebnis anlegen';
+      document.getElementById('entry-form').reset();
+      document.getElementById('form-entry-id').value = '';
+      if (currentCountry) document.getElementById('form-country-select').value = currentCountry.id;
+      document.getElementById('entry-delete-btn').classList.add('hidden');
+      document.getElementById('entry-sheet').classList.remove('hidden');
+    }
+
+    function openEditEntryModal(item) {
+      document.getElementById('sheet-title').innerText = 'Erlebnis bearbeiten';
+      document.getElementById('form-entry-id').value = item.id;
+      document.getElementById('form-country-select').value = item.country_id;
+      document.getElementById('form-category-select').value = item.category_id;
+      document.getElementById('form-title').value = item.title;
+      document.getElementById('form-status').value = item.status || 'erlebt';
+      document.getElementById('form-rating').value = item.rating || 0;
+      document.getElementById('form-location').value = item.location || '';
+      document.getElementById('form-lat').value = item.lat || '';
+      document.getElementById('form-lng').value = item.lng || '';
+      document.getElementById('form-notes').value = item.notes || '';
+      document.getElementById('entry-delete-btn').classList.remove('hidden');
+      document.getElementById('entry-sheet').classList.remove('hidden');
+    }
+
+    function closeEntrySheet() { document.getElementById('entry-sheet').classList.add('hidden'); }
+
+    async function saveEntry(e) {
+      e.preventDefault();
+      const id = document.getElementById('form-entry-id').value;
+      const payload = {
+        country_id: document.getElementById('form-country-select').value,
+        category_id: parseInt(document.getElementById('form-category-select').value),
+        title: document.getElementById('form-title').value,
+        status: document.getElementById('form-status').value,
+        rating: parseInt(document.getElementById('form-rating').value) || null,
+        location: document.getElementById('form-location').value || null,
+        lat: parseFloat(document.getElementById('form-lat').value) || null,
+        lng: parseFloat(document.getElementById('form-lng').value) || null,
+        notes: document.getElementById('form-notes').value || null
+      };
+
+      if (id) await supabaseClient.from('entries').update(payload).eq('id', id);
+      else await supabaseClient.from('entries').insert([payload]);
+      closeEntrySheet();
+      showToast("Erlebnis gespeichert!");
+      await loadInitialData();
+    }
+
+    function deleteEntryFromModal() {
+      const id = document.getElementById('form-entry-id').value;
+      if (!id) return;
+      showConfirmModal("Erlebnis löschen", "Soll dieses Erlebnis gelöscht werden?", async () => {
+        await supabaseClient.from('entries').delete().eq('id', id);
+        closeEntrySheet();
+        showToast("Erlebnis gelöscht!");
+        await loadInitialData();
+      });
+    }
+
+    // CRUD: DOKUMENTE
+    async function loadVaultDocuments() {
+      const container = document.getElementById('vault-docs-list');
+      const { data: docs } = await supabaseClient.from('documents_vault').select('*').order('expiry_date');
+      if (!docs || docs.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Keine Dokumente hinterlegt.</p>`;
+        return;
+      }
+      container.innerHTML = '';
+      docs.forEach(doc => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 flex justify-between items-start text-xs cursor-pointer hover:bg-slate-800 transition';
+        itemDiv.onclick = () => openEditDocModal(doc);
+        itemDiv.innerHTML = `
+          <div>
+            <strong class="text-slate-100 font-bold">${doc.title}</strong>
+            <p class="text-[10px] text-emerald-400 font-mono">${doc.doc_number || ''} (${doc.holder || 'Gemeinsam'})</p>
+          </div>
+          <span class="text-[9px] text-slate-400 font-mono">Ablauf: ${doc.expiry_date || '-'}</span>
+        `;
+        container.appendChild(itemDiv);
+      });
+    }
+
+    function openNewDocModal() {
+      document.getElementById('doc-sheet-title').innerText = '🔒 Dokument erfassen';
+      document.getElementById('doc-form').reset();
+      document.getElementById('doc-form-id').value = '';
+      document.getElementById('doc-delete-btn').classList.add('hidden');
+      document.getElementById('doc-sheet').classList.remove('hidden');
+    }
+
+    function openEditDocModal(doc) {
+      openNewDocModal();
+      document.getElementById('doc-sheet-title').innerText = 'Dokument bearbeiten';
+      document.getElementById('doc-form-id').value = doc.id;
+      document.getElementById('doc-form-title').value = doc.title;
+      document.getElementById('doc-form-type').value = doc.doc_type;
+      document.getElementById('doc-form-holder').value = doc.holder || 'Gemeinsam';
+      document.getElementById('doc-form-number').value = doc.doc_number || '';
+      document.getElementById('doc-form-expiry').value = doc.expiry_date || '';
+      document.getElementById('doc-form-notes').value = doc.notes || '';
+      document.getElementById('doc-delete-btn').classList.remove('hidden');
+    }
+
+    function closeDocSheet() { document.getElementById('doc-sheet').classList.add('hidden'); }
+
+    async function saveDocEntry(e) {
+      e.preventDefault();
+      const id = document.getElementById('doc-form-id').value;
+      const payload = {
+        title: document.getElementById('doc-form-title').value,
+        doc_type: document.getElementById('doc-form-type').value,
+        holder: document.getElementById('doc-form-holder').value,
+        doc_number: document.getElementById('doc-form-number').value || null,
+        expiry_date: document.getElementById('doc-form-expiry').value || null,
+        notes: document.getElementById('doc-form-notes').value || null
+      };
+      if (id) await supabaseClient.from('documents_vault').update(payload).eq('id', id);
+      else await supabaseClient.from('documents_vault').insert([payload]);
+      closeDocSheet();
+      showToast("Dokument gespeichert!");
+      await loadVaultDocuments();
+    }
+
+    function deleteDocFromModal() {
+      const id = document.getElementById('doc-form-id').value;
+      if (!id) return;
+      showConfirmModal("Dokument löschen", "Soll dieses Dokument entfernt werden?", async () => {
+        await supabaseClient.from('documents_vault').delete().eq('id', id);
+        closeDocSheet();
+        showToast("Dokument gelöscht!");
+        await loadVaultDocuments();
+      });
+    }
+
+    // CRUD: TRANSPORT
+    async function loadTransports() {
+      const container = document.getElementById('transport-list');
+      const { data: list } = await supabaseClient.from('transports').select('*').order('departure_time');
+      if (!list || list.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Keine Transporte hinterlegt.</p>`;
+        return;
+      }
+      container.innerHTML = '';
+      list.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs cursor-pointer hover:bg-slate-800 transition';
+        itemDiv.onclick = () => openEditTransportModal(item);
+        itemDiv.innerHTML = `
+          <div>
+            <div class="font-bold text-slate-100">${item.origin} ➔ ${item.destination}</div>
+            <p class="text-[10px] text-slate-400 font-mono">${item.departure_time || ''} • PNR: <strong class="text-emerald-400">${item.booking_code || 'N/A'}</strong></p>
+          </div>
+        `;
+        container.appendChild(itemDiv);
+      });
+    }
+
+    function openNewTransportModal() {
+      document.getElementById('transport-sheet-title').innerText = '✈️ Transport erfassen';
+      document.getElementById('transport-form').reset();
+      document.getElementById('transport-form-id').value = '';
+      document.getElementById('transport-delete-btn').classList.add('hidden');
+      document.getElementById('transport-sheet').classList.remove('hidden');
+    }
+
+    function openEditTransportModal(item) {
+      openNewTransportModal();
+      document.getElementById('transport-sheet-title').innerText = 'Transport bearbeiten';
+      document.getElementById('transport-form-id').value = item.id;
+      document.getElementById('transport-form-origin').value = item.origin;
+      document.getElementById('transport-form-dest').value = item.destination;
+      document.getElementById('transport-form-type').value = item.transport_type;
+      document.getElementById('transport-form-code').value = item.booking_code || '';
+      if (item.departure_time) document.getElementById('transport-form-date').value = item.departure_time.slice(0, 16);
+      document.getElementById('transport-delete-btn').classList.remove('hidden');
+    }
+
+    function closeTransportSheet() { document.getElementById('transport-sheet').classList.add('hidden'); }
+
+    async function saveTransportEntry(e) {
+      e.preventDefault();
+      const id = document.getElementById('transport-form-id').value;
+      const payload = {
+        origin: document.getElementById('transport-form-origin').value,
+        destination: document.getElementById('transport-form-dest').value,
+        transport_type: document.getElementById('transport-form-type').value,
+        booking_code: document.getElementById('transport-form-code').value || null,
+        departure_time: document.getElementById('transport-form-date').value || null
+      };
+      if (id) await supabaseClient.from('transports').update(payload).eq('id', id);
+      else await supabaseClient.from('transports').insert([payload]);
+      closeTransportSheet();
+      showToast("Transport gespeichert!");
+      await loadTransports();
+    }
+
+    function deleteTransportFromModal() {
+      const id = document.getElementById('transport-form-id').value;
+      if (!id) return;
+      showConfirmModal("Transport löschen", "Soll diese Fahrt gelöscht werden?", async () => {
+        await supabaseClient.from('transports').delete().eq('id', id);
+        closeTransportSheet();
+        showToast("Transport gelöscht!");
+        await loadTransports();
+      });
+    }
+
+    // CRUD: EQUIPMENT / PACKLISTE
+    async function loadEquipment() {
+      const container = document.getElementById('equipment-list');
+      const { data: items } = await supabaseClient.from('equipment').select('*').order('category');
+      if (!items || items.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Keine Ausrüstung erfasst.</p>`;
+        return;
+      }
+      container.innerHTML = '';
+      let totalW = 0;
+      items.forEach(item => {
+        if (item.weight_g) totalW += item.weight_g;
+        const div = document.createElement('div');
+        div.className = 'bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs';
+        div.onclick = () => openEditEquipmentModal(item);
+        div.innerHTML = `
+          <div class="cursor-pointer">
+            <span class="${item.is_packed ? 'line-through text-slate-500' : 'text-slate-200 font-bold'}">${item.item_name}</span>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono">${item.weight_g ? item.weight_g + 'g' : ''}</span>
+        `;
+        container.appendChild(div);
+      });
+      document.getElementById('pack-weight-stat').innerText = `Gesamtgewicht: ${(totalW / 1000).toFixed(2)} kg`;
+    }
+
+    function openNewEquipmentModal() {
+      document.getElementById('equipment-sheet-title').innerText = '🎒 Ausrüstung erfassen';
+      document.getElementById('equipment-form').reset();
+      document.getElementById('equipment-form-id').value = '';
+      document.getElementById('equipment-delete-btn').classList.add('hidden');
+      document.getElementById('equipment-sheet').classList.remove('hidden');
+    }
+
+    function openEditEquipmentModal(item) {
+      openNewEquipmentModal();
+      document.getElementById('equipment-sheet-title').innerText = 'Ausrüstung bearbeiten';
+      document.getElementById('equipment-form-id').value = item.id;
+      document.getElementById('equipment-form-name').value = item.item_name;
+      document.getElementById('equipment-form-cat').value = item.category;
+      document.getElementById('equipment-form-weight').value = item.weight_g || 0;
+      document.getElementById('equipment-delete-btn').classList.remove('hidden');
+    }
+
+    function closeEquipmentSheet() { document.getElementById('equipment-sheet').classList.add('hidden'); }
+
+    async function saveEquipmentEntry(e) {
+      e.preventDefault();
+      const id = document.getElementById('equipment-form-id').value;
+      const payload = {
+        item_name: document.getElementById('equipment-form-name').value,
+        category: document.getElementById('equipment-form-cat').value,
+        weight_g: parseInt(document.getElementById('equipment-form-weight').value) || 0
+      };
+      if (id) await supabaseClient.from('equipment').update(payload).eq('id', id);
+      else await supabaseClient.from('equipment').insert([payload]);
+      closeEquipmentSheet();
+      showToast("Ausrüstung gespeichert!");
+      await loadEquipment();
+    }
+
+    function deleteEquipmentFromModal() {
+      const id = document.getElementById('equipment-form-id').value;
+      if (!id) return;
+      showConfirmModal("Ausrüstung löschen", "Soll das Item gelöscht werden?", async () => {
+        await supabaseClient.from('equipment').delete().eq('id', id);
+        closeEquipmentSheet();
+        showToast("Item gelöscht!");
+        await loadEquipment();
+      });
+    }
+
+    // CRUD: FINANZEN (GEMEINSAMES BUDGET)
+    async function loadExpenses() {
+      const { data } = await supabaseClient.from('expenses').select('*').order('expense_date', { ascending: false });
+      allExpenses = data || [];
+      renderExpenseStats();
+    }
+
+    function renderExpenseStats() {
+      const selectedMonth = document.getElementById('expense-month-filter').value;
+      const monthExpenses = allExpenses.filter(e => e.expense_date && e.expense_date.startsWith(selectedMonth));
+      let total = 0, fixed = 0;
+      const catTotals = { 'Unterkunft': 0, 'Verpflegung': 0, 'Transport': 0, 'Aktivitäten': 0, 'Versicherung': 0, 'SIM/Tech': 0, 'Sonstiges': 0 };
+
+      monthExpenses.forEach(item => {
+        const amt = parseFloat(item.amount) || 0;
+        total += amt;
+        if (item.type === 'fixed') fixed += amt;
+        const cat = item.category || 'Sonstiges';
+        catTotals[cat] = (catTotals[cat] || 0) + amt;
+      });
+
+      const avgDaily = total > 0 ? (total / (new Date().getDate() || 30)) : 0;
+      document.getElementById('exp-stat-total').innerText = `${total.toFixed(2)} €`;
+      document.getElementById('exp-stat-daily').innerText = `${avgDaily.toFixed(2)} €`;
+      document.getElementById('exp-stat-fixed').innerText = `${fixed.toFixed(2)} €`;
+      document.getElementById('exp-count-label').innerText = `${monthExpenses.length} Posten`;
+
+      const catContainer = document.getElementById('expense-category-bars');
+      catContainer.innerHTML = '';
+      Object.keys(catTotals).forEach(cat => {
+        const catAmount = catTotals[cat];
+        const percent = total > 0 ? Math.round((catAmount / total) * 100) : 0;
+        if (catAmount > 0) {
+          catContainer.innerHTML += `
+            <div>
+              <div class="flex justify-between items-center text-xs mb-1">
+                <span class="text-slate-300">${categoryIcons[cat] || '📦'} ${cat}</span>
+                <span class="text-slate-400 font-mono">${catAmount.toFixed(2)} € (${percent}%)</span>
+              </div>
+              <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/60">
+                <div class="bg-emerald-500 h-2 rounded-full" style="width: ${percent}%"></div>
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      const listContainer = document.getElementById('expense-list-container');
+      listContainer.innerHTML = '';
+      if (monthExpenses.length === 0) {
+        listContainer.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Keine Ausgaben in diesem Monat.</p>`;
+        return;
+      }
+      monthExpenses.forEach(item => {
+        const div = document.createElement('div');
+        div.onclick = () => openEditExpenseModal(item);
+        div.className = 'pt-2 flex justify-between items-center cursor-pointer hover:bg-slate-700/30 p-1.5 rounded transition text-xs';
+        div.innerHTML = `
+          <div>
+            <div class="font-bold text-slate-100">${item.title}</div>
+            <div class="text-[10px] text-slate-400">${item.expense_date} • ${item.category}</div>
+          </div>
+          <div class="text-right font-mono font-bold text-emerald-400">-${parseFloat(item.amount).toFixed(2)} €</div>
+        `;
+        listContainer.appendChild(div);
+      });
+    }
+
+    function openNewExpenseModal() {
+      document.getElementById('expense-sheet-title').innerText = '💰 Neue gemeinsame Ausgabe';
+      document.getElementById('expense-form').reset();
+      document.getElementById('exp-form-id').value = '';
+      document.getElementById('exp-form-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('exp-delete-btn').classList.add('hidden');
+      document.getElementById('expense-sheet').classList.remove('hidden');
+    }
+
+    function openEditExpenseModal(item) {
+      openNewExpenseModal();
+      document.getElementById('expense-sheet-title').innerText = 'Ausgabe bearbeiten';
+      document.getElementById('exp-form-id').value = item.id;
+      document.getElementById('exp-form-title').value = item.title;
+      document.getElementById('exp-form-amount').value = item.amount;
+      document.getElementById('exp-form-type').value = item.type || 'variable';
+      document.getElementById('exp-form-category').value = item.category || 'Sonstiges';
+      document.getElementById('exp-form-date').value = item.expense_date || '';
+      document.getElementById('exp-delete-btn').classList.remove('hidden');
+    }
+
+    function closeExpenseSheet() { document.getElementById('expense-sheet').classList.add('hidden'); }
+
+    async function saveExpenseEntry(e) {
+      e.preventDefault();
+      const id = document.getElementById('exp-form-id').value;
+      const payload = {
+        title: document.getElementById('exp-form-title').value,
+        amount: parseFloat(document.getElementById('exp-form-amount').value),
+        type: document.getElementById('exp-form-type').value,
+        category: document.getElementById('exp-form-category').value,
+        expense_date: document.getElementById('exp-form-date').value
+      };
+      if (id) await supabaseClient.from('expenses').update(payload).eq('id', id);
+      else await supabaseClient.from('expenses').insert([payload]);
+      closeExpenseSheet();
+      showToast("Ausgabe gespeichert!");
+      await loadExpenses();
+    }
+
+    function deleteExpenseFromModal() {
+      const id = document.getElementById('exp-form-id').value;
+      if (!id) return;
+      showConfirmModal("Ausgabe löschen", "Soll dieser Posten gelöscht werden?", async () => {
+        await supabaseClient.from('expenses').delete().eq('id', id);
+        closeExpenseSheet();
+        showToast("Ausgabe gelöscht!");
+        await loadExpenses();
+      });
+    }
+
+    // SONSTIGES & UTILS
+    async function loadCountryInfo() {
+      if (!currentCountry) return;
+      const { data } = await supabaseClient.from('country_info').select('*').eq('country_id', currentCountry.id).maybeSingle();
+      if (!data) return;
+      document.getElementById('info-card-country-name').innerText = `${currentCountry.flag_emoji || '🏳️'} ${currentCountry.name} (${data.capital || ''})`;
+      document.getElementById('info-card-visa-req').innerText = data.visa_req || 'Visumfrei';
+      document.getElementById('info-card-max-stay').innerText = data.max_stay ? `Max. ${data.max_stay}` : '';
+      document.getElementById('info-card-power-plug').innerText = data.power_plug || '-';
+      document.getElementById('info-card-sim-tips').innerText = data.sim_tips || '-';
+      document.getElementById('info-card-embassy-address').innerText = data.embassy_address ? `📍 ${data.embassy_address}` : '-';
+      document.getElementById('info-card-embassy-phone').innerText = data.embassy_phone ? `📞 ${data.embassy_phone}` : '-';
+      document.getElementById('info-card-emergency').innerText = data.emergency_numbers ? `🚨 Notruf: ${data.emergency_numbers}` : '-';
+    }
+
+    function updateCalcCurrencyInfo() {
+      const code = currentCountry?.currency_code || 'USD';
+      const info = exchangeData[code] || { rate: 1.0, name: 'Landeswährung' };
+      document.getElementById('calc-rate-info').innerText = `1 EUR = ${info.rate} ${code}`;
+      document.getElementById('calc-curr-name').innerText = info.name;
+      document.getElementById('calc-curr-code').innerText = code;
+      document.getElementById('calc-symbol-local').innerText = code;
+      document.getElementById('calc-label-local').innerText = `Betrag in ${info.name}`;
+      convertCurrency('local');
+    }
+
+    function convertCurrency(source) {
+      const code = currentCountry?.currency_code || 'USD';
+      const rate = exchangeData[code]?.rate || 1.0;
+      if (source === 'local') {
+        const val = parseFloat(document.getElementById('calc-input-local').value);
+        document.getElementById('calc-input-eur').value = (isNaN(val) || val === 0) ? '' : (val / rate).toFixed(2);
+      } else {
+        const val = parseFloat(document.getElementById('calc-input-eur').value);
+        document.getElementById('calc-input-local').value = (isNaN(val) || val === 0) ? '' : (val * rate).toFixed(2);
+      }
+    }
+
+    function clearCalc() {
+      document.getElementById('calc-input-local').value = '';
+      document.getElementById('calc-input-eur').value = '';
+    }
+
+    function calculateGlobalStats() {
+      const visitedCount = new Set(allVisits.map(v => v.country_id)).size;
+      const worldPercent = ((visitedCount / 195) * 100).toFixed(1);
+      document.getElementById('stat-world').innerText = `${worldPercent}%`;
+      document.getElementById('stat-visited-countries').innerText = visitedCount;
+    }
+
+    function renderVisitsList() {
+      const container = document.getElementById('visits-list');
+      if (!currentCountry) return;
+      const cVisits = allVisits.filter(v => v.country_id === currentCountry.id);
+      if (cVisits.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 italic">Keine Besuche eingetragen.</p>';
+        return;
+      }
+      container.innerHTML = '';
+      cVisits.forEach(v => {
+        container.innerHTML += `
+          <div class="bg-slate-800 p-2.5 rounded-lg border border-slate-700 text-xs flex justify-between items-center">
+            <div>
+              <div class="font-bold text-slate-200">${v.title || 'Aufenthalt'}</div>
+              <div class="text-slate-400 mt-0.5">📅 ${v.start_date} - ${v.end_date || 'Offen'}</div>
+            </div>
+            <button onclick="deleteVisit(${v.id})" class="text-rose-400 font-bold">🗑️</button>
+          </div>
+        `;
+      });
+    }
+
+    async function addVisitPrompt() {
+      const title = prompt("Besuch Name:");
+      if (!title) return;
+      const start = prompt("Startdatum (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+      await supabaseClient.from('visits').insert([{ country_id: currentCountry.id, title, start_date: start }]);
+      await loadInitialData();
+    }
+
+    async function deleteVisit(id) {
+      showConfirmModal("Besuch löschen", "Besuch wirklich löschen?", async () => {
+        await supabaseClient.from('visits').delete().eq('id', id);
+        showToast("Besuch gelöscht!");
+        await loadInitialData();
+      });
+    }
+
+    async function loadVocabulary() {
+      const container = document.getElementById('vocab-list');
+      if (!currentCountry) return;
+      const { data: vocabs } = await supabaseClient.from('vocabulary').select('*').eq('country_id', currentCountry.id);
+      container.innerHTML = (!vocabs || vocabs.length === 0) ? `<p class="text-center text-xs text-slate-500 py-6">Keine Vokabeln.</p>` : '';
+      vocabs?.forEach(v => {
+        container.innerHTML += `
+          <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+            <div>
+              <div class="font-bold text-emerald-400">${v.original_phrase}</div>
+              <div class="text-slate-300">${v.translation}</div>
+            </div>
+            <button onclick="speakText('${v.original_phrase}')" class="bg-slate-700 p-2 rounded-lg">🔊</button>
+          </div>
+        `;
+      });
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+    }
+
+    async function openNewVocabModal() {
+      const phrase = prompt("Vokabel / Satz:");
+      const translation = phrase ? prompt("Übersetzung:") : null;
+      if (translation) {
+        await supabaseClient.from('vocabulary').insert([{ country_id: currentCountry.id, original_phrase: phrase, translation }]);
+        await loadVocabulary();
+      }
+    }
+
+    function renderMedications() {
+      const list = document.getElementById('med-list');
+      if (!list) return;
+      list.innerHTML = '';
+      medications.forEach(m => {
+        list.innerHTML += `
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs">
+            <div>
+              <div class="font-bold text-slate-100">${m.name}</div>
+              <p class="text-[9px] text-slate-400">${m.use}</p>
+            </div>
+            <div class="text-right">
+              <div class="font-mono font-bold text-cyan-400">${m.qty}</div>
+              <div class="text-[9px] text-slate-500">EXP: ${m.exp}</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function openNewMedModal() { document.getElementById('med-sheet').classList.remove('hidden'); }
+    function closeMedSheet() { document.getElementById('med-sheet').classList.add('hidden'); }
+    function saveMedEntry(e) {
+      e.preventDefault();
+      medications.push({
+        id: Date.now(),
+        name: document.getElementById('med-name').value,
+        qty: document.getElementById('med-qty').value,
+        exp: document.getElementById('med-exp').value,
+        use: document.getElementById('med-use').value
+      });
+      closeMedSheet();
+      renderMedications();
+      showToast("Medikament gespeichert!");
+    }
+  </script>
+</body>
+</html>
